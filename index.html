@@ -1,0 +1,1784 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cooling by Location — Water, Carbon &amp; the Data Center Boom</title>
+<meta name="description" content="An interactive U.S. map of data centers, grid carbon and rainfall by state, comparing Northern Virginia, Dallas–Fort Worth and Phoenix to test which data center cooling method fits each location.">
+<meta name="theme-color" content="#0a0e12">
+<meta property="og:title" content="Cooling by Location">
+<meta property="og:description" content="Which data center cooling method fits where? An interactive study of water, grid carbon and three U.S. hubs.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0e12'/%3E%3Cpath d='M16 5c4 5.5 7 9.4 7 13.2A7 7 0 0 1 9 18.2C9 14.4 12 10.5 16 5z' fill='%236cc6d6'/%3E%3Cpath d='M16 13c2 2.8 3.4 4.6 3.4 6.4a3.4 3.4 0 0 1-6.8 0c0-1.8 1.4-3.6 3.4-6.4z' fill='%23e8814e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   Cooling by Location — design system
+   Theme: water vs. heat. Ink-dark default, "paper" light mode.
+   ========================================================= */
+:root {
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-body: "Geist", ui-sans-serif, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --radius: 18px;
+  --nav-h: 60px;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0e12;
+  --bg-2: #0d1318;
+  --surface: #10171d;
+  --surface-2: #151e25;
+  --surface-3: #1b262e;
+  --glass: rgba(16, 23, 29, .66);
+  --border: rgba(206, 222, 230, .085);
+  --border-2: rgba(206, 222, 230, .16);
+  --text: #ece7dc;
+  --text-2: #a8b0b2;
+  --text-3: #6d787c;
+  --empty: #1c2329;
+  --water: #6cc6d6;
+  --heat: #e8814e;
+  --leaf: #8fd0a8;
+  --sun: #e2b862;
+  --s1: #6fb3e6; --s2: #e8814e; --s3: #6fcfa5; --s4: #e2b862;
+  --good: #8fd99a; --warn: #f0c062; --bad: #f08d7f;
+  --good-bg: rgba(143, 217, 154, .1); --warn-bg: rgba(240, 192, 98, .1); --bad-bg: rgba(240, 141, 127, .1);
+  --pin: #ece7dc; --pin-text: #0a0e12; --pin-ring: #0a0e12;
+  --shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 20px 50px -24px rgba(0,0,0,.7);
+  --focus: #6cc6d6;
+  --spot: rgba(108, 198, 214, .08);
+  --grain-op: .06;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2eee5;
+  --bg-2: #ebe6db;
+  --surface: #fbf9f4;
+  --surface-2: #f1ede4;
+  --surface-3: #e5e0d4;
+  --glass: rgba(251, 249, 244, .72);
+  --border: rgba(30, 36, 40, .1);
+  --border-2: rgba(30, 36, 40, .2);
+  --text: #12171b;
+  --text-2: #4b5357;
+  --text-3: #7b8286;
+  --empty: #e2ddd1;
+  --water: #1f8ea3;
+  --heat: #cf5a22;
+  --leaf: #2f8a57;
+  --sun: #a97a10;
+  --s1: #2a78d6; --s2: #e0602b; --s3: #17a06f; --s4: #c98f00;
+  --good: #1f7a2b; --warn: #8a5f00; --bad: #b8342b;
+  --good-bg: #e3f0de; --warn-bg: #f6ebd3; --bad-bg: #f7e2dd;
+  --pin: #12171b; --pin-text: #fbf9f4; --pin-ring: #fbf9f4;
+  --shadow: 0 1px 2px rgba(30, 30, 20, .05), 0 18px 40px -22px rgba(30, 30, 20, .25);
+  --focus: #1f8ea3;
+  --spot: rgba(31, 142, 163, .07);
+  --grain-op: .045;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 12px); }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 400 16px/1.6 var(--font-body);
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  transition: background-color .5s var(--ease), color .5s var(--ease);
+  overflow-x: hidden;
+}
+a { color: var(--water); text-underline-offset: 3px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 6px; }
+::selection { background: var(--heat); color: var(--bg); }
+em { font-style: italic; }
+sup { font-family: var(--font-mono); font-size: 10px; margin-left: 1px; }
+sup a, .findings a, .sub a { text-decoration: none; color: var(--water); }
+
+.grain {
+  position: fixed; inset: -50%; z-index: 100; pointer-events: none; opacity: var(--grain-op);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.skip { position: absolute; left: 12px; top: -60px; z-index: 60; background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; }
+.skip:focus { top: 12px; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: clamp(18px, 4vw, 40px); padding-right: clamp(18px, 4vw, 40px); }
+
+/* ---------- nav ---------- */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40; height: var(--nav-h);
+  transition: background-color .35s var(--ease), border-color .35s var(--ease), backdrop-filter .35s;
+  border-bottom: 1px solid transparent; color: #ece7dc;
+}
+.topnav.solid {
+  background: var(--glass); border-bottom-color: var(--border); color: var(--text);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3);
+}
+.navin { display: flex; align-items: center; gap: 20px; height: 100%; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: -.01em; white-space: nowrap; flex: none; }
+.brand em { font-family: var(--font-display); font-weight: 400; font-size: 18px; color: var(--heat); }
+.mark { width: 26px; height: 26px; color: var(--water); }
+.navlinks { display: flex; gap: 2px; overflow-x: auto; flex: 1; min-width: 0; scrollbar-width: none; justify-content: center; }
+.navlinks::-webkit-scrollbar { display: none; }
+.navlinks a {
+  position: relative; color: inherit; opacity: .62; text-decoration: none; font-size: 13.5px; padding: 7px 11px; border-radius: 999px; white-space: nowrap;
+  transition: opacity .2s, background-color .2s;
+}
+.navlinks a:hover { opacity: 1; }
+.navlinks a.on { opacity: 1; background: rgba(127, 140, 150, .16); }
+.themebtn {
+  display: inline-flex; align-items: center; gap: 7px; flex: none; cursor: pointer;
+  background: rgba(127, 140, 150, .12); border: 1px solid rgba(127, 140, 150, .22); border-radius: 999px; padding: 6px 13px 6px 10px; font-size: 13px;
+  transition: background-color .2s, transform .2s var(--ease);
+}
+.themebtn:hover { background: rgba(127, 140, 150, .22); }
+.themebtn:active { transform: scale(.96); }
+.themebtn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.themebtn .moon { fill: currentColor; stroke: none; }
+[data-theme="dark"] .themebtn .moon, [data-theme="light"] .themebtn .sun { display: none; }
+.progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--water), var(--heat)); }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative; min-height: 100svh; display: flex; align-items: center; overflow: hidden; isolation: isolate;
+  background: #070a0d; color: #ece7dc;
+  --hero-sub: #a7b2b6;
+}
+#flow { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; }
+.hero-veil {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(70% 60% at 18% 55%, rgba(7,10,13,.85), transparent 70%),
+    linear-gradient(180deg, rgba(7,10,13,.55) 0%, transparent 25%, transparent 70%, #070a0d 100%);
+}
+[data-theme="light"] .hero-veil { background:
+    radial-gradient(70% 60% at 18% 55%, rgba(7,10,13,.85), transparent 70%),
+    linear-gradient(180deg, rgba(7,10,13,.55) 0%, transparent 25%, transparent 70%, #070a0d 100%); }
+.hero-in { width: 100%; padding-top: calc(var(--nav-h) + 48px); padding-bottom: 96px; }
+.eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--hero-sub); margin: 0 0 28px; }
+.live { display: inline-flex; align-items: center; gap: 8px; padding: 5px 11px; border-radius: 999px; border: 1px solid rgba(232, 129, 78, .4); color: #f3b08a; background: rgba(232, 129, 78, .08); }
+.live i { width: 7px; height: 7px; border-radius: 50%; background: #e8814e; box-shadow: 0 0 0 0 rgba(232,129,78,.6); animation: livepulse 2s infinite; }
+@keyframes livepulse { 0% { box-shadow: 0 0 0 0 rgba(232,129,78,.55); } 80%,100% { box-shadow: 0 0 0 9px rgba(232,129,78,0); } }
+
+.display {
+  font-family: var(--font-display); font-weight: 400; margin: 0 0 36px;
+  font-size: clamp(64px, 13.5vw, 196px); line-height: .86; letter-spacing: -.035em;
+}
+.display .line { display: block; overflow: hidden; padding-bottom: .06em; }
+.display .line > span { display: inline-block; }
+.display em {
+  font-style: italic; padding-right: .06em;
+  background: linear-gradient(100deg, #8fdbe6 0%, #6cc6d6 35%, #e8a67c 70%, #e8814e 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.display .line:nth-child(2) { padding-left: clamp(0px, 9vw, 150px); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(24px, 5vw, 72px); align-items: end; max-width: 1080px; margin-bottom: 52px; }
+.lead { font-size: clamp(18px, 1.7vw, 21px); line-height: 1.55; color: #c9cfcf; margin: 0; max-width: 560px; font-weight: 300; }
+.hl-water { color: #8fdbe6; font-weight: 500; }
+.hl-heat { color: #f0a173; font-weight: 500; }
+.rq {
+  position: relative; margin: 0; padding: 20px 22px 20px 24px; border-radius: 16px;
+  background: rgba(16, 23, 29, .55); border: 1px solid rgba(206, 222, 230, .12);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.rq::before { content: ""; position: absolute; left: 0; top: 18px; bottom: 18px; width: 2px; border-radius: 2px; background: linear-gradient(var(--water, #6cc6d6), #e8814e); }
+.rqlabel { display: block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--hero-sub); margin-bottom: 8px; }
+.rq p { margin: 0; font-family: var(--font-display); font-size: clamp(20px, 1.9vw, 24px); line-height: 1.3; color: #ece7dc; }
+
+.herostats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 1080px; border-top: 1px solid rgba(206, 222, 230, .14); }
+.hs { padding: 20px 24px 0 0; }
+.hs + .hs { padding-left: 24px; border-left: 1px solid rgba(206, 222, 230, .14); }
+.hs b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(40px, 5vw, 64px); line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
+.hs:nth-child(1) b { color: #8fdbe6; }
+.hs:nth-child(2) b { color: #f0a173; }
+.hs span { font-size: 13.5px; color: var(--hero-sub); line-height: 1.4; display: block; max-width: 240px; }
+
+.scrollcue { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--hero-sub); text-decoration: none; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; }
+.scrollcue i { width: 1px; height: 44px; background: linear-gradient(rgba(206,222,230,.5), transparent); position: relative; overflow: hidden; }
+.scrollcue i::after { content: ""; position: absolute; left: 0; top: -40%; width: 1px; height: 40%; background: #ece7dc; animation: cue 2.2s var(--ease) infinite; }
+@keyframes cue { to { top: 110%; } }
+
+/* intro choreography */
+.intro { opacity: 0; transform: translateY(26px); animation: intro 1.1s var(--ease-out) forwards; animation-delay: calc(var(--d, 0) * 110ms + 150ms); }
+.display .intro { transform: translateY(105%); }
+@keyframes intro { to { opacity: 1; transform: none; } }
+
+/* ---------- ticker ---------- */
+.ticker { position: relative; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg-2); padding: 16px 0; }
+.ticker-track { display: flex; width: max-content; animation: ticker 48s linear infinite; }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+.ticker-track span { display: inline-flex; align-items: center; gap: 14px; padding: 0 28px; white-space: nowrap; font-size: 14px; color: var(--text-2); }
+.ticker-track b { font-family: var(--font-display); font-weight: 400; font-size: 26px; color: var(--text); letter-spacing: -.01em; }
+.ticker-track span::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--heat); margin-left: 28px; opacity: .7; }
+.ticker-track span:nth-child(even)::after { background: var(--water); }
+@keyframes ticker { to { transform: translateX(-50%); } }
+
+/* ---------- sections ---------- */
+main section { padding-top: clamp(80px, 11vw, 140px); }
+.sechead { display: grid; grid-template-columns: minmax(80px, 180px) minmax(0, 1fr); gap: clamp(16px, 4vw, 48px); align-items: start; margin-bottom: clamp(32px, 4vw, 52px); }
+.secnum {
+  font-family: var(--font-display); font-size: clamp(72px, 10vw, 150px); line-height: .78; letter-spacing: -.04em;
+  color: transparent; -webkit-text-stroke: 1px var(--border-2); font-variant-numeric: tabular-nums; user-select: none;
+}
+.kick { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--heat); margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
+.kick::before { content: ""; width: 22px; height: 1px; background: currentColor; }
+h2 { font-family: var(--font-display); font-weight: 400; font-size: clamp(38px, 5.2vw, 72px); line-height: 1; letter-spacing: -.025em; margin: 0 0 18px; max-width: 920px; text-wrap: balance; }
+h2 em { color: var(--water); }
+.sub { color: var(--text-2); margin: 0; max-width: 680px; font-size: 17px; line-height: 1.6; text-wrap: pretty; }
+h3 { font-weight: 600; letter-spacing: -.01em; }
+
+.card {
+  position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: clamp(18px, 2vw, 26px); box-shadow: var(--shadow); isolation: isolate;
+  transition: border-color .3s var(--ease), background-color .5s var(--ease), transform .4s var(--ease);
+}
+.card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .35s;
+  background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 50%), var(--spot), transparent 45%);
+}
+.card:hover { border-color: var(--border-2); }
+.card:hover::before { opacity: 1; }
+
+/* reveal */
+.rv { opacity: 0; transform: translateY(34px); transition: opacity 1s var(--ease-out), transform 1s var(--ease-out); transition-delay: calc(var(--d, 0) * 90ms); }
+.rv.in { opacity: 1; transform: none; }
+
+/* ---------- findings ---------- */
+.findings { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+.findings li {
+  position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; color: var(--text-2);
+  display: flex; flex-direction: column; gap: 6px; overflow: hidden; grid-column: span 4;
+  transition: border-color .3s, transform .5s var(--ease), opacity 1s var(--ease-out);
+}
+.findings li:hover { border-color: var(--border-2); transform: translateY(-4px); }
+.findings li.in:hover { transform: translateY(-4px); }
+.findings li.f-big { grid-column: span 8; grid-row: span 2; justify-content: flex-end; min-height: 380px;
+  background: radial-gradient(120% 90% at 100% 0%, rgba(108,198,214,.13), transparent 55%), var(--surface); }
+.findings li.f-wide { grid-column: span 12; display: grid; grid-template-columns: minmax(150px, auto) minmax(0, 1fr); column-gap: 36px; align-content: center;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--leaf) 9%, transparent), transparent 60%), var(--surface); }
+.findings li.f-wide .fig { grid-row: span 2; margin: 0; padding: 0; align-self: center; }
+.findings li.f-wide p { max-width: 720px; }
+.findings .fig { font-family: var(--font-display); font-size: clamp(52px, 5.5vw, 76px); line-height: .95; letter-spacing: -.03em; color: var(--text); margin-bottom: auto; padding-bottom: 22px; display: flex; align-items: baseline; gap: 10px; font-variant-numeric: tabular-nums; }
+.findings .f-big .fig { font-size: clamp(110px, 16vw, 230px); color: var(--water); line-height: .8; margin-bottom: 18px; }
+.findings .fig small { font-family: var(--font-mono); font-size: 13px; letter-spacing: .06em; color: var(--text-3); text-transform: uppercase; }
+.findings .fig i { font-style: italic; color: var(--heat); }
+.findings .fig-heat { color: var(--heat); }
+.findings .fig-water { color: var(--leaf); }
+.findings .fig-sm { font-size: clamp(44px, 4.6vw, 62px); }
+.findings b { color: var(--text); font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+.findings .f-big b { font-size: clamp(20px, 2vw, 26px); }
+.findings p { margin: 0; font-size: 15px; line-height: 1.55; }
+.findings .f-big p { font-size: 17px; max-width: 520px; }
+
+/* ---------- map ---------- */
+.controls { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 4px; gap: 2px; flex-wrap: wrap; }
+.seg button {
+  border: 0; background: transparent; color: var(--text-2); padding: 8px 16px; border-radius: 999px; cursor: pointer; font-size: 14px; font-weight: 500;
+  transition: color .2s, background-color .25s var(--ease), box-shadow .25s;
+}
+.seg button:hover { color: var(--text); }
+.seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); box-shadow: 0 6px 18px -8px rgba(0,0,0,.6); }
+.hubpicks { display: flex; gap: 8px; flex-wrap: wrap; }
+.hubpick {
+  display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--border); background: var(--surface);
+  border-radius: 999px; padding: 5px 14px 5px 5px; cursor: pointer; font-size: 14px; font-weight: 500;
+  transition: border-color .2s, transform .2s var(--ease), background-color .2s;
+}
+.hubpick:hover { border-color: var(--border-2); transform: translateY(-1px); }
+.hubpick[aria-pressed="true"] { border-color: var(--hc, var(--text)); background: color-mix(in srgb, var(--hc, var(--text)) 12%, var(--surface)); }
+.pinnum {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--pin); color: var(--pin-text);
+  display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; flex: none;
+}
+.hubpick .pinnum, .hubcard .pinnum, .takeaway .pinnum { background: var(--hc, var(--pin)); color: #0a0e12; }
+
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.mapcard { padding: 20px 20px 16px; }
+.maphead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.maphead h3 { margin: 0 0 2px; font-size: 17px; }
+.maphead small { color: var(--text-3); font-size: 12px; font-family: var(--font-mono); }
+#map { min-height: 200px; }
+#map svg { width: 100%; height: auto; display: block; }
+.state { stroke: var(--bg); stroke-width: .8; cursor: pointer; transition: fill .6s var(--ease), opacity .2s, stroke .2s; }
+.state:hover { stroke: var(--text); stroke-width: 1.6; }
+.state.sel { stroke: var(--text); stroke-width: 2; }
+#states:hover .state:not(:hover):not(.sel) { opacity: .72; }
+.bubble { fill: var(--text); fill-opacity: .16; stroke: var(--text); stroke-opacity: .55; stroke-width: 1; pointer-events: none; transition: opacity .4s; }
+#map .bubble { transform-box: fill-box; transform-origin: center; animation: bubin .9s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 14ms + 200ms); }
+@keyframes bubin { from { transform: scale(0); opacity: 0; } }
+#map.nobubbles #bubbles { opacity: 0; }
+.toggle { display: inline-flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--text-2); cursor: pointer; user-select: none; }
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle .sw { width: 34px; height: 20px; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--border-2); position: relative; transition: background-color .25s; }
+.toggle .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--text-2); transition: transform .3s var(--ease), background-color .25s; }
+.toggle input:checked + .sw { background: var(--water); border-color: transparent; }
+.toggle input:checked + .sw::after { transform: translateX(14px); background: var(--bg); }
+.toggle input:focus-visible + .sw { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.pin { cursor: pointer; outline: none; }
+.pin circle.ring { fill: none; stroke: var(--hc, var(--pin)); stroke-width: 1.5; opacity: .5; }
+.pin circle.dotc { fill: var(--hc, var(--pin)); stroke: var(--bg); stroke-width: 2.5; transition: r .3s var(--ease); }
+.pin text { fill: #0a0e12; font-family: var(--font-mono); font-size: 12px; font-weight: 600; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.pin .plabel { fill: var(--text); font-family: var(--font-body); font-size: 13px; font-weight: 600; text-anchor: start; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.pin.on circle.dotc { r: 13; }
+.pin:focus-visible circle.dotc { stroke: var(--focus); }
+.pin circle.ring { transform-box: fill-box; transform-origin: center; }
+.pin.on circle.ring { animation: pulse 2s ease-out infinite; }
+@keyframes pulse { 0% { transform: scale(.8); opacity: .7; } 100% { transform: scale(2.3); opacity: 0; } }
+
+.legend { display: flex; align-items: flex-end; gap: 12px 16px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--text-2); }
+.legend > span:first-child { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); align-self: center; }
+.legend .bins { display: flex; gap: 2px; }
+.legend .bin { display: flex; flex-direction: column; gap: 4px; min-width: 40px; }
+.legend .bin i { height: 8px; display: block; transition: background-color .6s var(--ease); }
+.legend .bin:first-child i { border-radius: 4px 0 0 4px; }
+.legend .bin:last-child i { border-radius: 0 4px 4px 0; }
+.legend .bin span { font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-3); }
+.legend .na, .legend .bub { display: inline-flex; align-items: center; gap: 6px; }
+.legend .na i { width: 14px; height: 8px; border-radius: 3px; background: var(--empty); display: inline-block; }
+.legend .bub svg { overflow: visible; }
+.legend .bub .bubble { animation: none; }
+.mapnote { font-size: 13px; color: var(--text-3); margin: 10px 0 0; }
+
+.mapskel { position: relative; aspect-ratio: 975 / 610; border-radius: 12px; overflow: hidden; background: var(--surface-2); display: grid; place-items: center; color: var(--text-3); font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.mapskel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(127,140,150,.1), transparent); animation: shimmer 1.4s infinite; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+.tilemap { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; padding: 6px 0; }
+.tile { aspect-ratio: 1; border-radius: 6px; background: var(--empty); color: var(--text); display: flex; align-items: center; justify-content: center; border: 0; padding: 0; cursor: pointer; font-family: var(--font-mono); font-size: clamp(8px, 1.2vw, 12px); font-weight: 500; transition: background-color .5s var(--ease), transform .2s var(--ease); }
+.tile:hover { transform: scale(1.08); }
+.tile.sel { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
+
+/* side panel */
+.panel { display: flex; flex-direction: column; gap: 16px; }
+.panel > * { animation: panelin .55s var(--ease-out) both; }
+.panel > *:nth-child(2) { animation-delay: 40ms; } .panel > *:nth-child(3) { animation-delay: 80ms; }
+.panel > *:nth-child(4) { animation-delay: 120ms; } .panel > *:nth-child(5) { animation-delay: 160ms; }
+.panel > *:nth-child(6) { animation-delay: 200ms; } .panel > *:nth-child(7) { animation-delay: 240ms; }
+@keyframes panelin { from { opacity: 0; transform: translateY(10px); } }
+.panel .kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); margin: 0; }
+.panel h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(32px, 3.2vw, 42px); line-height: 1; letter-spacing: -.02em; display: flex; align-items: center; gap: 12px; }
+.panel h3 .pinnum { width: 30px; height: 30px; font-size: 13px; }
+.panel .climate { color: var(--text-2); margin: -6px 0 0; font-size: 15px; }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kv.kv4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kv div { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+.kv b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 28px; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.kv small { display: block; color: var(--text-2); font-size: 11.5px; line-height: 1.3; margin-top: 4px; }
+.kv em { display: block; font-style: normal; font-family: var(--font-mono); color: var(--text-3); font-size: 10.5px; margin-top: 4px; }
+.panel ul { margin: 0; padding: 0; list-style: none; font-size: 14.5px; color: var(--text-2); }
+.panel li { position: relative; padding-left: 18px; margin-bottom: 8px; line-height: 1.5; }
+.panel li::before { content: ""; position: absolute; left: 0; top: .62em; width: 8px; height: 1px; background: var(--hc, var(--text-3)); }
+.verdict { position: relative; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px 14px 18px; font-size: 14.5px; line-height: 1.5; overflow: hidden; }
+.verdict::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--hc, var(--water)); }
+.verdict b { display: block; font-family: var(--font-mono); font-weight: 500; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--water); cursor: pointer; font-size: 14px; text-align: left; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.linkbtn::after { content: "→"; transition: transform .25s var(--ease); }
+.linkbtn:hover::after { transform: translateX(4px); }
+
+details { margin-top: 16px; }
+summary { cursor: pointer; color: var(--text-2); font-size: 14px; font-weight: 500; list-style: none; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 999px; transition: border-color .2s, color .2s; }
+summary::-webkit-details-marker { display: none; }
+summary:hover { color: var(--text); border-color: var(--border-2); }
+summary i { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); transition: transform .3s var(--ease); }
+details[open] summary i { transform: rotate(-135deg) translateY(-2px); }
+.statetable { margin-top: 14px; }
+
+/* ---------- bar charts ---------- */
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.chart h3, .angrid h3 { font-size: 16px; margin: 0 0 4px; }
+.chart .unit, .angrid .unit { font-size: 13px; color: var(--text-2); margin: 0 0 18px; }
+.bars { position: relative; --lab: 92px; --valw: 56px; }
+.bars:has(.refwrap) { padding-bottom: 24px; }
+.row { display: grid; grid-template-columns: var(--lab) minmax(0, 1fr) var(--valw); align-items: center; gap: 10px; margin-bottom: 12px; transition: opacity .4s var(--ease); }
+.row .lab { font-size: 13px; color: var(--text-2); line-height: 1.2; }
+.track { position: relative; height: 24px; background: var(--surface-2); border-radius: 6px; }
+.bar { position: absolute; top: 3px; height: 18px; border-radius: 0 5px 5px 0; transform-origin: 0 50%; }
+.bar:first-child { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+.bar.hatch { background-image: repeating-linear-gradient(135deg, rgba(10,14,18,.55) 0 3px, transparent 3px 6px); }
+.val { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hit { position: absolute; inset: 0; cursor: crosshair; }
+.refwrap { position: absolute; top: -4px; bottom: 22px; left: calc(var(--lab) + 10px); right: calc(var(--valw) + 10px); pointer-events: none; }
+.refline { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px dashed var(--text); opacity: .55; }
+.reflab { position: absolute; bottom: -22px; transform: translateX(-50%); font-family: var(--font-mono); font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.chartlegend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); margin-top: 10px; }
+.chartlegend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; background: var(--text-3); margin-right: 6px; vertical-align: -1px; }
+.chartlegend i.hatch { background-image: repeating-linear-gradient(135deg, rgba(10,14,18,.6) 0 3px, transparent 3px 6px); }
+
+/* animated growth when visible */
+.in .bar, .in .hrow .fill { animation: grow 1.1s var(--ease-out) both; }
+.in .row:nth-child(2) .bar { animation-delay: 80ms; } .in .row:nth-child(3) .bar { animation-delay: 160ms; }
+.in .hrow .fill { animation-delay: calc(var(--i, 0) * 35ms); }
+@keyframes grow { from { transform: scaleX(0); } }
+
+/* ---------- analysis ---------- */
+.angrid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+.an-a { grid-column: span 5; } .an-b { grid-column: span 7; }
+.an-c { grid-column: span 6; } .an-d { grid-column: span 6; }
+.cardhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.smallbtn { border: 1px solid var(--border-2); background: transparent; color: var(--text-2); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; transition: color .2s, background-color .2s; }
+.smallbtn:hover { color: var(--bg); background: var(--text); }
+.seg-sm button { padding: 6px 12px; font-size: 13px; }
+.hrow { display: grid; grid-template-columns: 150px minmax(0, 1fr) 50px; gap: 10px; align-items: center; margin-bottom: 7px; font-size: 13px; padding: 2px 4px; margin-left: -4px; margin-right: -4px; border-radius: 6px; transition: background-color .15s; }
+.hrow:hover { background: var(--surface-2); }
+.hrow .lab { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
+.hrow .trk { position: relative; height: 14px; }
+.hrow .fill { position: absolute; left: 0; top: 2px; height: 10px; border-radius: 0 4px 4px 0; transform-origin: 0 50%; }
+.hrow .v { font-family: var(--font-mono); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; }
+.hrow.hub .lab { color: var(--text); font-weight: 600; }
+.scatter svg { width: 100%; height: auto; display: block; overflow: visible; }
+.scatter .ax { stroke: var(--border); }
+.scatter .tk { fill: var(--text-3); font-family: var(--font-mono); font-size: 10.5px; }
+.scatter .at { fill: var(--text-2); font-size: 12px; }
+.scatter .pt { stroke: var(--surface); stroke-width: 1.5; transition: transform .2s var(--ease); transform-box: fill-box; transform-origin: center; }
+.scatter g[data-state]:hover .pt { transform: scale(1.6); }
+.scatter g[data-state] { animation: ptin .7s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 12ms); }
+@keyframes ptin { from { opacity: 0; transform: translateY(8px); } }
+.scatter .pl { fill: var(--text); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.scatter .ref { stroke: var(--heat); stroke-dasharray: 4 4; opacity: .7; }
+.scatter .reft { fill: var(--heat); }
+.shape { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
+
+/* ---------- hubs ---------- */
+.hubstrip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.hubcard {
+  position: relative; text-align: left; border: 0; background: transparent; padding: 26px 26px 24px; cursor: pointer; overflow: hidden;
+  display: flex; flex-direction: column; gap: 14px; min-height: 260px; transition: background-color .35s var(--ease);
+}
+.hubcard + .hubcard { border-left: 1px solid var(--border); }
+.hubcard::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--hc); transform: scaleX(0); transform-origin: 0 50%; transition: transform .6s var(--ease-out); }
+.hubcard:hover { background: color-mix(in srgb, var(--hc) 5%, transparent); }
+.hubcard[aria-pressed="true"] { background: color-mix(in srgb, var(--hc) 9%, transparent); }
+.hubcard[aria-pressed="true"]::after { transform: scaleX(1); }
+.hubcard .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.hubcard h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 3vw, 42px); line-height: 1; letter-spacing: -.02em; }
+.hubcard .clim { color: var(--text-2); font-size: 14px; margin: -6px 0 0; }
+.hubcard .nums { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 22px; margin-top: auto; }
+.hubcard .nums b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; color: var(--hc); font-variant-numeric: tabular-nums; }
+.hubcard .nums small { font-size: 11.5px; color: var(--text-3); line-height: 1.3; display: block; margin-top: 4px; }
+.hubcard .gauge { height: 4px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+.hubcard .gauge i { display: block; height: 100%; width: var(--w); background: var(--hc); border-radius: inherit; transform-origin: 0 50%; }
+.in .hubcard .gauge i { animation: grow 1.4s var(--ease-out) both .3s; }
+.hubcard .gl { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); letter-spacing: .04em; margin-top: -8px; }
+
+/* ---------- matrix ---------- */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; vertical-align: top; padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); font-weight: 500; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.matrix { padding: 8px; }
+.matrix table { min-width: 760px; }
+.matrix tbody tr:last-child th, .matrix tbody tr:last-child td { border-bottom: 0; }
+.matrix tbody th { font-weight: 600; width: 22%; font-size: 15px; }
+.matrix tbody th small { display: block; font-weight: 400; color: var(--text-3); font-size: 12.5px; margin-top: 3px; }
+.matrix td, .matrix th { transition: background-color .25s var(--ease), opacity .25s; }
+.matrix tr.pick th, .matrix tr.pick td { background: color-mix(in srgb, var(--water) 8%, transparent); }
+.matrix tr.pick th { box-shadow: inset 3px 0 0 var(--water); }
+.matrix tr.pick th::after { content: "Our pick"; display: inline-block; margin-top: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--bg); background: var(--water); padding: 3px 8px; border-radius: 999px; font-weight: 500; }
+.matrix tbody tr:hover th, .matrix tbody tr:hover td { background: var(--surface-2); }
+.matrix .colhot { background: color-mix(in srgb, var(--hc) 9%, transparent) !important; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; padding: 4px 10px; border-radius: 999px; margin-bottom: 7px; }
+.chip.good { color: var(--good); background: var(--good-bg); }
+.chip.warn { color: var(--warn); background: var(--warn-bg); }
+.chip.bad { color: var(--bad); background: var(--bad-bg); }
+.why { display: block; color: var(--text-2); font-size: 13.5px; line-height: 1.5; }
+.dotx { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 0; }
+
+/* state table */
+.statetable table { min-width: 520px; }
+.statetable th button { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; letter-spacing: inherit; text-transform: inherit; }
+.statetable th button::after { content: " ↕"; color: var(--text-3); }
+.statetable th[aria-sort="descending"] button::after { content: " ↓"; color: var(--text); }
+.statetable th[aria-sort="ascending"] button::after { content: " ↑"; color: var(--text); }
+.statetable td.num, .statetable th.num { text-align: right; font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.statetable tr.hubrow td { font-weight: 600; }
+.statetable tbody tr { cursor: pointer; }
+.statetable tbody tr:hover td { background: var(--surface-2); }
+.tablewrap { max-height: 480px; overflow: auto; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); }
+.tablewrap thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.tablewrap td { padding: 10px 16px; }
+
+/* ---------- verdict band ---------- */
+#recommend { padding-top: clamp(80px, 11vw, 140px); }
+.verdict-band {
+  position: relative; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  background:
+    radial-gradient(60% 80% at 85% 50%, color-mix(in srgb, var(--heat) 13%, transparent), transparent 70%),
+    radial-gradient(50% 70% at 10% 30%, color-mix(in srgb, var(--water) 12%, transparent), transparent 70%),
+    var(--bg-2);
+}
+.verdict-in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: clamp(24px, 5vw, 64px); align-items: center; padding-top: clamp(56px, 8vw, 110px); padding-bottom: clamp(56px, 8vw, 110px); }
+.verdict-copy h2 { font-size: clamp(46px, 6.6vw, 98px); line-height: .95; }
+.verdict-copy .sub { font-size: 18px; }
+.loop { position: relative; }
+.loop svg { width: 100%; height: auto; display: block; overflow: visible; }
+.loop .pipe { fill: none; stroke: url(#lg); stroke-width: 14; stroke-linecap: round; opacity: .22; }
+.loop .flowline { fill: none; stroke: url(#lg); stroke-width: 2.5; stroke-dasharray: 10 14; animation: dash 2.2s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -48; } }
+.loop .drops circle { fill: var(--text); }
+.loop .chip rect { fill: var(--surface); stroke: var(--border-2); stroke-width: 1.5; }
+.loop .chip .die { fill: color-mix(in srgb, var(--heat) 70%, var(--surface)); stroke: none; }
+.loop .chip path, .loop .rad path { stroke: var(--text-3); stroke-width: 2; stroke-linecap: round; fill: none; }
+.loop .rad rect { fill: var(--surface); stroke: color-mix(in srgb, var(--water) 60%, transparent); stroke-width: 1.5; }
+.loop .rad path { stroke: var(--water); }
+.loop text { fill: var(--text-3); font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.loop .t-heat { fill: var(--heat); } .loop .t-water { fill: var(--water); }
+.loop .glow { animation: glow 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes glow { 50% { transform: scale(1.12); opacity: .7; } }
+.loopstat { position: absolute; right: 0; top: -8px; text-align: right; }
+.loopstat b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(44px, 5vw, 64px); line-height: 1; color: var(--water); }
+.loopstat span { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+
+.takeaways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: clamp(40px, 5vw, 64px); border-top: 1px solid var(--border); }
+.takeaway { padding: 28px 28px 8px 0; display: flex; flex-direction: column; gap: 12px; }
+.takeaway + .takeaway { padding-left: 28px; border-left: 1px solid var(--border); }
+.takeaway h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1.05; letter-spacing: -.015em; display: flex; gap: 12px; align-items: center; }
+.takeaway p { margin: 0; color: var(--text-2); font-size: 15.5px; line-height: 1.6; }
+.nextsteps { margin-top: 40px; }
+.nextsteps h3 { margin: 0 0 18px; font-size: 17px; }
+.nextsteps ol { list-style: none; counter-reset: ns; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; }
+.nextsteps li { counter-increment: ns; display: flex; gap: 14px; align-items: baseline; color: var(--text-2); font-size: 15px; padding: 12px 0; border-top: 1px solid var(--border); }
+.nextsteps li::before { content: counter(ns, decimal-leading-zero); font-family: var(--font-mono); font-size: 12px; color: var(--heat); flex: none; }
+
+/* ---------- methods & sources ---------- */
+.methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.methods h3 { margin: 0 0 14px; font-size: 17px; }
+.methods ul { margin: 0; padding: 0; list-style: none; color: var(--text-2); font-size: 14.5px; }
+.methods li { padding: 12px 0; border-top: 1px solid var(--border); line-height: 1.55; }
+.methods li b { color: var(--text); display: block; font-weight: 600; margin-bottom: 2px; }
+.sources ol { list-style: none; counter-reset: src; padding: 0; margin: 0; columns: 2; column-gap: 40px; font-size: 14px; }
+.sources li { counter-increment: src; break-inside: avoid; display: flex; gap: 14px; padding: 11px 0; border-top: 1px solid var(--border); }
+.sources li::before { content: counter(src, decimal-leading-zero); font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); padding-top: 2px; flex: none; }
+.sources li a { color: var(--text-2); text-decoration: none; transition: color .2s; }
+.sources li a:hover { color: var(--text); text-decoration: underline; text-decoration-color: var(--water); }
+.sources li:target { background: color-mix(in srgb, var(--water) 10%, transparent); }
+.sources li:target a { color: var(--text); }
+
+/* ---------- footer ---------- */
+.foot { margin-top: clamp(90px, 12vw, 160px); border-top: 1px solid var(--border); overflow: hidden; }
+.foot-title {
+  font-family: var(--font-display); font-size: clamp(64px, 14.5vw, 220px); line-height: .9; letter-spacing: -.04em; margin: 40px 0 0; white-space: nowrap;
+  color: transparent; -webkit-text-stroke: 1px var(--border-2);
+}
+.foot-title em { -webkit-text-stroke: 0; background: linear-gradient(100deg, var(--water), var(--heat)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.foot-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding: 24px 0 36px; color: var(--text-3); font-size: 13px; border-top: 1px solid var(--border); margin-top: 24px; }
+.totop { color: var(--text-2); text-decoration: none; }
+.totop:hover { color: var(--text); }
+
+/* ---------- tooltip ---------- */
+.tip {
+  position: fixed; left: 0; top: 0; pointer-events: none; z-index: 50; background: var(--glass); color: var(--text);
+  border: 1px solid var(--border-2); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  padding: 11px 13px; border-radius: 12px; font-size: 13px; line-height: 1.5; max-width: 260px; opacity: 0; transform: translateY(4px);
+  transition: opacity .15s, transform .15s var(--ease); box-shadow: 0 18px 40px -16px rgba(0,0,0,.55);
+}
+.tip.show { opacity: 1; transform: none; }
+.tip b { font-size: 14px; font-weight: 600; }
+.tip .tr { display: flex; justify-content: space-between; gap: 16px; font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.tip .tr.on { color: var(--text); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1080px) {
+  .findings li { grid-column: span 6; }
+  .findings li.f-big { grid-column: span 12; grid-row: auto; min-height: 320px; }
+  .an-a, .an-b, .an-c, .an-d { grid-column: span 12; }
+}
+@media (max-width: 900px) {
+  .mapgrid, .charts, .methods, .verdict-in { grid-template-columns: minmax(0, 1fr); }
+  .hero-grid { grid-template-columns: minmax(0, 1fr); }
+  .hubstrip, .takeaways { grid-template-columns: minmax(0, 1fr); }
+  .hubcard + .hubcard { border-left: 0; border-top: 1px solid var(--border); }
+  .takeaway + .takeaway { padding-left: 0; border-left: 0; border-top: 1px solid var(--border); }
+  .takeaway { padding-right: 0; }
+  .sources ol { columns: 1; }
+  .nextsteps ol { grid-template-columns: minmax(0, 1fr); }
+  .navlinks { justify-content: flex-start; }
+  .loop { max-width: 460px; }
+}
+@media (max-width: 640px) {
+  :root { --nav-h: 56px; }
+  .brand span { display: none; }
+  .navin { gap: 8px; }
+  .themebtn span { display: none; }
+  .themebtn { padding: 7px; }
+  .sechead { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .secnum { font-size: 64px; }
+  .findings li { grid-column: span 12; }
+  .findings li.f-wide { grid-template-columns: minmax(0, 1fr); }
+  .findings li.f-wide .fig { grid-row: auto; padding-bottom: 16px; }
+  .herostats { grid-template-columns: minmax(0, 1fr); }
+  .hs, .hs + .hs { padding: 16px 0; border-left: 0; display: flex; align-items: baseline; gap: 16px; }
+  .hs + .hs { border-top: 1px solid rgba(206, 222, 230, .14); }
+  .hs b { min-width: 110px; font-size: 40px; margin: 0; }
+  .bars { --lab: 74px; }
+  .hrow { grid-template-columns: 112px minmax(0, 1fr) 44px; }
+  .kv b { font-size: 22px; }
+  .display .line:nth-child(2) { padding-left: 0; }
+  .scrollcue { display: none; }
+  .hubcard .nums { gap: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  .rv, .intro { opacity: 1; transform: none; }
+  .ticker-track { animation: none; }
+}
+@media (forced-colors: active) {
+  .state, .tile, .legend i { forced-color-adjust: none; }
+}
+
+/* paper-theme contrast for hub badges */
+[data-theme="light"] .pin text:not(.plabel),
+[data-theme="light"] .hubpick .pinnum,
+[data-theme="light"] .hubcard .pinnum,
+[data-theme="light"] .takeaway .pinnum,
+[data-theme="light"] .panel h3 .pinnum,
+[data-theme="light"] .hrow .pinnum,
+[data-theme="light"] .statetable .pinnum { color: #fff !important; fill: #fff; }
+[data-theme="light"] .bar.hatch, [data-theme="light"] .chartlegend i.hatch { background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.6) 0 3px, transparent 3px 6px); }
+</style>
+<script>
+  try { var t = localStorage.getItem("theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+</script>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<a class="skip" href="#overview">Skip to findings</a>
+
+<nav class="topnav" id="topnav" aria-label="Sections">
+  <div class="wrap navin">
+    <a class="brand" href="#top" aria-label="Cooling by Location, back to top">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4c4.4 6 7.6 10.2 7.6 14.4a7.6 7.6 0 0 1-15.2 0C8.4 14.2 11.6 10 16 4z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 13c2.2 3 3.6 4.9 3.6 6.8a3.6 3.6 0 0 1-7.2 0c0-1.9 1.4-3.8 3.6-6.8z" fill="var(--heat)"/></svg>
+      <span>Cooling <em>by</em> Location</span>
+    </a>
+    <div class="navlinks" id="navlinks">
+      <a href="#overview">Findings</a>
+      <a href="#map-sec">Map</a>
+      <a href="#analysis">Analysis</a>
+      <a href="#hubs">Hubs</a>
+      <a href="#cooling">Cooling fit</a>
+      <a href="#recommend">Verdict</a>
+      <a href="#methods">Methods</a>
+      <a href="#sources-sec">Sources</a>
+    </div>
+    <button class="themebtn" id="themebtn" type="button" aria-label="Switch color theme">
+      <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.6A8.3 8.3 0 0 1 9.4 4a8.3 8.3 0 1 0 10.6 10.6z"/></svg>
+      <span id="themelabel">Paper</span>
+    </button>
+  </div>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+</nav>
+
+<header class="hero" id="top">
+  <canvas id="flow" aria-hidden="true"></canvas>
+  <div class="hero-veil" aria-hidden="true"></div>
+  <div class="wrap hero-in">
+    <p class="eyebrow intro" style="--d:0">
+      <span>KSB 630 · AI &amp; Sustainability · Water Management team · Final report, December 2026</span>
+    </p>
+    <h1 class="display">
+      <span class="line"><span class="intro" style="--d:1">Cooling</span></span>
+      <span class="line"><span class="intro" style="--d:2"><em>by</em> Location</span></span>
+    </h1>
+    <div class="hero-grid">
+      <p class="lead intro" style="--d:3">How do different data center cooling methods trade local <span class="hl-water">water</span> against <span class="hl-heat">carbon emissions</span>, and which method fits where? We mapped every state, then tested our pick in three very different hubs.</p>
+      <aside class="rq intro" style="--d:4">
+        <span class="rqlabel">Research question</span>
+        <p>Is direct-to-chip liquid cooling the best choice everywhere, or does the right cooling method depend on local water and the local power grid?</p>
+      </aside>
+    </div>
+    <div class="herostats intro" id="herostats" style="--d:5"></div>
+  </div>
+  <a class="scrollcue" href="#overview" aria-label="Scroll to findings"><span>Scroll</span><i></i></a>
+</header>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track" id="ticker"></div>
+</div>
+
+<main>
+  <section id="overview" class="wrap" aria-labelledby="ov-h">
+    <header class="sechead rv">
+      <span class="secnum">00</span>
+      <div>
+        <p class="kick">Summary</p>
+        <h2 id="ov-h">Key findings</h2>
+        <p class="sub">What the data shows across all 50 states, DC and our three case-study hubs.</p>
+      </div>
+    </header>
+    <ol class="findings">
+      <li class="rv f-big" style="--d:0">
+        <span class="fig"><span data-count="27" data-suffix="%">27%</span></span>
+        <b>Data centers are highly concentrated.</b>
+        <p>Virginia and Texas hold 984 of the 3,712 data centers counted, about 27% of the U.S. total.<a href="#src-8" aria-label="source 8"><sup>8</sup></a></p>
+      </li>
+      <li class="rv" style="--d:1">
+        <span class="fig fig-heat"><span data-count="1307">1,307</span><small>MW</small></span>
+        <b>The fastest growth is in the driest hub.</b>
+        <p>Phoenix has 1,307 MW under construction, more than the 904 MW it runs today, with just 7.2 inches of rain a year, in a state rated High for water stress.<sup><a href="#src-1" aria-label="source 1">1</a>,<a href="#src-5" aria-label="source 5">5</a>,<a href="#src-15" aria-label="source 15">15</a></sup></p>
+      </li>
+      <li class="rv" style="--d:2">
+        <span class="fig fig-sm">TX <i>&gt;</i> VA</span>
+        <b>The grid matters as much as water.</b>
+        <p>Weighted by grid carbon, Texas outranks Virginia despite having fewer data centers.<a href="#src-9" aria-label="source 9"><sup>9</sup></a></p>
+      </li>
+      <li class="rv f-wide" style="--d:3">
+        <span class="fig fig-water"><span data-count="3">3</span><small>of 3 hubs</small></span>
+        <b>Recommendation: direct-to-chip liquid cooling.</b>
+        <p>It is the only method rated a good fit in all three hubs, but each location needs different support, from reclaimed water to clean power.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section id="map-sec" class="wrap" aria-labelledby="map-h">
+    <header class="sechead rv">
+      <span class="secnum">01</span>
+      <div>
+        <p class="kick">Explore</p>
+        <h2 id="map-h">Where data centers are, and <em>what surrounds them</em></h2>
+        <p class="sub">Switch the map between four measures. Hover a state for its numbers, or select a numbered pin to open one of our three hubs.</p>
+      </div>
+    </header>
+    <div class="controls rv">
+      <div class="seg" id="metricseg" role="group" aria-label="Map measure"></div>
+      <div class="hubpicks" id="hubpicks" role="group" aria-label="Choose a hub"></div>
+    </div>
+    <div class="mapgrid rv">
+      <div class="card mapcard">
+        <div class="maphead">
+          <div><h3 id="maptitle"></h3><small id="mapsource"></small></div>
+          <label class="toggle"><input type="checkbox" id="bubtoggle" checked><span class="sw" aria-hidden="true"></span> Data center bubbles</label>
+        </div>
+        <div id="map" role="img" aria-label="Map of the United States"></div>
+        <div class="legend" id="legend"></div>
+        <p class="mapnote" id="mapnote"></p>
+      </div>
+      <div class="card panel" id="panel" aria-live="polite"></div>
+    </div>
+    <details class="rv">
+      <summary><span>Show all 50 states and DC as a table</span><i aria-hidden="true"></i></summary>
+      <div class="statetable"><div class="tablewrap" id="statetable"></div></div>
+    </details>
+  </section>
+
+  <section id="analysis" class="wrap" aria-labelledby="an-h">
+    <header class="sechead rv">
+      <span class="secnum">02</span>
+      <div>
+        <p class="kick">Analysis</p>
+        <h2 id="an-h">State-by-state analysis</h2>
+        <p class="sub">Where data centers, water stress and carbon-heavy grids overlap. Adapted from an independent water-stress analysis<a href="#src-14" aria-label="source 14"><sup>14</sup></a> and extended with grid carbon.</p>
+      </div>
+    </header>
+    <div class="angrid">
+      <div class="card rv an-a" style="--d:0">
+        <div class="cardhead"><div><h3>Data centers by state</h3><p class="unit">Facilities, October 2026. Two states hold over a quarter of the total.</p></div>
+          <button type="button" class="smallbtn" id="dcall">Show all</button></div>
+        <div id="an-dc"></div>
+      </div>
+      <div class="card rv an-b" style="--d:1">
+        <div class="cardhead"><div><h3>Data centers vs. conditions</h3><p class="unit">Each mark is a state. Shape and color show region.</p></div>
+          <div class="seg seg-sm" id="scatterseg" role="group" aria-label="Scatter y-axis">
+            <button type="button" data-sy="co2" aria-pressed="true">Grid carbon</button>
+            <button type="button" data-sy="stress" aria-pressed="false">Water stress</button>
+            <button type="button" data-sy="rain" aria-pressed="false">Rainfall</button>
+          </div></div>
+        <div id="an-scatter"></div>
+        <div class="chartlegend" id="scatterlegend"></div>
+      </div>
+      <div class="card rv an-c" style="--d:0">
+        <h3>Data centers in high water-stress states</h3>
+        <p class="unit">States with an average WRI water stress score of 3 or more out of 5, where evaporative cooling strains supply most.</p>
+        <div id="an-dry"></div>
+      </div>
+      <div class="card rv an-d" style="--d:1">
+        <h3>Carbon-weighted data centers</h3>
+        <p class="unit">Data centers × state grid carbon ÷ U.S. average. Higher means growth there adds more emissions.</p>
+        <div id="an-carbon"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hubs" class="wrap" aria-labelledby="cmp-h">
+    <header class="sechead rv">
+      <span class="secnum">03</span>
+      <div>
+        <p class="kick">Case study</p>
+        <h2 id="cmp-h">Three hubs, <em>three climates</em></h2>
+        <p class="sub">A water-rich hub, a middle-ground hub and a desert hub. Phoenix is building more than it runs today, gets less than a fifth of Northern Virginia's rain, and sits on a grid nearly as carbon-heavy as Texas.</p>
+      </div>
+    </header>
+    <div class="hubstrip rv" id="hubstrip"></div>
+    <div class="charts">
+      <div class="card chart rv" style="--d:0" id="chart-cap"></div>
+      <div class="card chart rv" style="--d:1" id="chart-rain"></div>
+      <div class="card chart rv" style="--d:2" id="chart-grid"></div>
+    </div>
+  </section>
+
+  <section id="cooling" class="wrap" aria-labelledby="fit-h">
+    <header class="sechead rv">
+      <span class="secnum">04</span>
+      <div>
+        <p class="kick">Assessment</p>
+        <h2 id="fit-h">Cooling fit by location</h2>
+        <p class="sub">Our team's assessment of each method in each hub. Direct-to-chip liquid cooling is the only method rated a good fit in all three.</p>
+      </div>
+    </header>
+    <div class="card scroll matrix rv" id="matrix"></div>
+  </section>
+
+  <section id="recommend" aria-labelledby="take-h">
+    <div class="verdict-band">
+      <div class="wrap verdict-in">
+        <div class="verdict-copy rv">
+          <p class="kick">05 · Recommendation</p>
+          <h2 id="take-h">Direct-to-chip <em>liquid cooling</em>, by default.</h2>
+          <p class="sub">A sealed loop carries heat straight off the chip and reuses the same water, losing only 0–5% of it. What it needs alongside it depends on the location.</p>
+        </div>
+        <div class="loop rv" style="--d:1" aria-hidden="true">
+          <svg viewBox="0 0 360 300">
+            <defs>
+              <linearGradient id="lg" x1="0" x2="1" y1="0" y2="0"><stop offset="0" style="stop-color:var(--water)"/><stop offset="1" style="stop-color:var(--heat)"/></linearGradient>
+              <radialGradient id="chipglow"><stop offset="0" style="stop-color:var(--heat);stop-opacity:.55"/><stop offset="1" style="stop-color:var(--heat);stop-opacity:0"/></radialGradient>
+            </defs>
+            <circle cx="250" cy="150" r="88" fill="url(#chipglow)" class="glow"/>
+            <path id="looppath" class="pipe" d="M70 90 H250 a60 60 0 0 1 0 120 H70 a60 60 0 0 1 0 -120 Z"/>
+            <path class="flowline" d="M70 90 H250 a60 60 0 0 1 0 120 H70 a60 60 0 0 1 0 -120 Z"/>
+            <g class="drops">
+              <circle r="4"><animateMotion dur="6s" repeatCount="indefinite"><mpath href="#looppath"/></animateMotion></circle>
+              <circle r="4"><animateMotion dur="6s" begin="-1.5s" repeatCount="indefinite"><mpath href="#looppath"/></animateMotion></circle>
+              <circle r="4"><animateMotion dur="6s" begin="-3s" repeatCount="indefinite"><mpath href="#looppath"/></animateMotion></circle>
+              <circle r="4"><animateMotion dur="6s" begin="-4.5s" repeatCount="indefinite"><mpath href="#looppath"/></animateMotion></circle>
+            </g>
+            <g class="chip" transform="translate(250 150)">
+              <rect x="-34" y="-34" width="68" height="68" rx="8"/>
+              <rect x="-20" y="-20" width="40" height="40" rx="4" class="die"/>
+              <path d="M-26 -42v8M-13 -42v8M0 -42v8M13 -42v8M26 -42v8M-26 34v8M-13 34v8M0 34v8M13 34v8M26 34v8M-42 -26h8M-42 -13h8M-42 0h8M-42 13h8M-42 26h8M34 -26h8M34 -13h8M34 0h8M34 13h8M34 26h8"/>
+            </g>
+            <g class="rad" transform="translate(60 150)">
+              <rect x="-26" y="-30" width="52" height="60" rx="6"/>
+              <path d="M-16 -18h32M-16 -6h32M-16 6h32M-16 18h32"/>
+            </g>
+            <text x="60" y="232" text-anchor="middle">Cool return</text>
+            <text x="250" y="262" text-anchor="middle">AI chip</text>
+            <text x="160" y="80" text-anchor="middle" class="t-heat">heat out →</text>
+            <text x="160" y="228" text-anchor="middle" class="t-water">← cooled water</text>
+          </svg>
+          <div class="loopstat"><b data-count="95" data-suffix="%+">95%+</b><span>of loop water reused</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="takeaways" id="takeaways"></div>
+      <div class="card nextsteps rv">
+        <h3>Future research</h3>
+        <ol>
+          <li><span>Score individual sites with basin-level water stress instead of state averages.</span></li>
+          <li><span>Measure the energy cost of closed-loop and zero-water cooling designs.</span></li>
+          <li><span>Turn the cooling fit ratings into a decision guide based on water stress and grid carbon.</span></li>
+          <li><span>Examine where AI-driven cooling optimization helps most, and its limits.</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section id="methods" class="wrap" aria-labelledby="me-h">
+    <header class="sechead rv">
+      <span class="secnum">A</span>
+      <div>
+        <p class="kick">Appendix</p>
+        <h2 id="me-h">Methods and limitations</h2>
+      </div>
+    </header>
+    <div class="methods">
+      <div class="card rv" style="--d:0">
+        <h3>Data and definitions</h3>
+        <ul>
+          <li><b>Data centers</b> Facility counts by state from one tracker (Electric Choice, October 2026). Other trackers report different totals, so counts are best read as relative.</li>
+          <li><b>Grid carbon</b> EPA eGRID 2023 CO₂ output emission rate, in pounds per megawatt-hour, for each state.</li>
+          <li><b>Water stress</b> WRI Aqueduct 4.0 baseline water stress: the share of available surface and groundwater that is withdrawn each year, scored 0 (low) to 5 (extremely high). WRI scores river basins; each state's score is the area-weighted average of the basins inside it, using the U.S. extract shared by the independent analysis.</li>
+          <li><b>Rainfall</b> NOAA state average annual precipitation, 1971–2000.</li>
+          <li><b>Hubs</b> Metro-level figures. Capacity from JLL (mid-2025), rainfall at the main airport station (1991–2020), and carbon for the regional grid that serves the metro, so hub and state numbers can differ.</li>
+          <li><b>Map colors</b> Water stress uses WRI's five categories (Low through Extremely High). The other measures group states into seven equal-count bands.</li>
+        </ul>
+      </div>
+      <div class="card rv" style="--d:1">
+        <h3>Limitations</h3>
+        <ul>
+          <li><b>Water stress is a state average.</b> A single basin can be far more stressed than its state's score, and a large, lightly used area can pull a state's average down. Hawaii is not covered.</li>
+          <li><b>Hub numbers mix levels.</b> Hub capacity, rainfall and grid carbon are metro-level, but water stress is the statewide average.</li>
+          <li><b>Cooling fit ratings are qualitative.</b> They are the team's judgment based on the sources, not measured results.</li>
+          <li><b>Company disclosure is limited.</b> Most operators do not report which cooling method each site uses.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="sources-sec" class="wrap sources" aria-labelledby="src-h">
+    <header class="sechead rv">
+      <span class="secnum">B</span>
+      <div>
+        <p class="kick">References</p>
+        <h2 id="src-h">Sources</h2>
+        <p class="sub">Builds on an independent analysis that mapped data centers against WRI Aqueduct water stress<sup><a href="#src-14" aria-label="source 14">14</a>,<a href="#src-15" aria-label="source 15">15</a></sup>. That work asks <em>where</em> the water risk is; this page adds grid carbon and asks <em>which cooling method fits</em> each place.</p>
+      </div>
+    </header>
+    <ol id="sources" class="rv"></ol>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="foot-title" aria-hidden="true">Cooling <em>by</em> Location</p>
+    <div class="foot-row">
+      <span>KSB 630 AI &amp; Sustainability · Water Management team</span>
+      <span>Final report, December 2026.</span>
+      <a href="#top" class="totop">Back to top ↑</a>
+    </div>
+  </div>
+</footer>
+
+<div class="tip" id="tip" role="tooltip"></div>
+<script>
+/* Cooling by Location — interactive brief */
+(function () {
+  "use strict";
+  // ===================== DATA =====================
+  // [abbr, name, fips, data centers (Oct 2026) [8], grid lb CO2/MWh (eGRID 2023) [9], avg rainfall in/yr (1971–2000) [10]]
+  var STATE_ROWS = [
+    ["AL","Alabama","01",33,711.0,58.3],["AK","Alaska","02",7,809.8,22.5],["AZ","Arizona","04",105,686.7,13.6],
+    ["AR","Arkansas","05",20,993.4,50.6],["CA","California","06",264,393.5,22.2],["CO","Colorado","08",55,1085.0,15.9],
+    ["CT","Connecticut","09",16,538.3,50.3],["DE","Delaware","10",7,703.2,45.7],["DC","District of Columbia","11",11,394.1,null],
+    ["FL","Florida","12",181,786.6,54.5],["GA","Georgia","13",232,713.8,50.7],["HI","Hawaii","15",10,1385.1,63.7],
+    ["ID","Idaho","16",12,313.3,18.9],["IL","Illinois","17",229,471.7,39.2],["IN","Indiana","18",45,1457.2,41.7],
+    ["IA","Iowa","19",58,630.2,34.0],["KS","Kansas","20",22,728.2,28.9],["KY","Kentucky","21",24,1735.0,48.9],
+    ["LA","Louisiana","22",24,761.4,60.1],["ME","Maine","23",9,311.8,42.2],["MD","Maryland","24",22,520.0,44.5],
+    ["MA","Massachusetts","25",41,822.4,47.7],["MI","Michigan","26",41,793.2,32.8],["MN","Minnesota","27",46,747.5,27.3],
+    ["MS","Mississippi","28",21,826.3,59.0],["MO","Missouri","29",38,1444.1,42.2],["MT","Montana","30",14,1056.2,15.3],
+    ["NE","Nebraska","31",37,1018.2,23.6],["NV","Nevada","32",41,642.4,9.5],["NH","New Hampshire","33",13,272.9,43.4],
+    ["NJ","New Jersey","34",134,468.3,47.1],["NM","New Mexico","35",24,770.2,14.6],["NY","New York","36",199,465.1,41.8],
+    ["NC","North Carolina","37",64,624.0,50.3],["ND","North Dakota","38",21,1288.4,17.8],["OH","Ohio","39",117,1063.8,39.1],
+    ["OK","Oklahoma","40",36,647.2,36.5],["OR","Oregon","41",87,364.2,27.4],["PA","Pennsylvania","42",67,645.8,42.9],
+    ["RI","Rhode Island","44",9,839.1,47.9],["SC","South Carolina","45",20,557.2,49.8],["SD","South Dakota","46",10,334.0,20.1],
+    ["TN","Tennessee","47",59,657.3,54.2],["TX","Texas","48",466,768.3,28.9],["UT","Utah","49",51,1413.0,12.2],
+    ["VT","Vermont","50",9,43.0,42.7],["VA","Virginia","51",518,536.9,44.3],["WA","Washington","53",71,265.1,38.4],
+    ["WV","West Virginia","54",20,1954.4,45.2],["WI","Wisconsin","55",32,1157.0,32.6],["WY","Wyoming","56",20,1820.3,12.9]
+  ];
+  var STATES = STATE_ROWS.map(function (r) { return { abbr: r[0], name: r[1], fips: r[2], dc: r[3], co2: r[4], rain: r[5] }; });
+  // WRI Aqueduct 4.0 baseline water stress (0–5), area-weighted state average of basin scores [15]
+  var BWS = {"Nevada": 4.39, "New Mexico": 4.28, "Nebraska": 4.13, "Arizona": 3.75, "California": 3.53, "Delaware": 3.52, "Wyoming": 3.44, "Kansas": 3.41, "Colorado": 3.34, "Texas": 3.01, "Idaho": 2.99, "North Carolina": 2.89, "Florida": 2.67, "New Jersey": 2.59, "Virginia": 2.59, "Wisconsin": 2.55, "South Carolina": 2.52, "Montana": 2.49, "Oregon": 2.22, "Rhode Island": 2.19, "Maryland": 2.01, "Indiana": 1.94, "Georgia": 1.92, "Minnesota": 1.9, "Utah": 1.86, "Arkansas": 1.85, "Illinois": 1.81, "Oklahoma": 1.72, "Massachusetts": 1.67, "Tennessee": 1.52, "Ohio": 1.51, "Pennsylvania": 1.48, "Missouri": 1.46, "Kentucky": 1.45, "Mississippi": 1.38, "West Virginia": 1.35, "Alabama": 1.29, "New Hampshire": 1.23, "Louisiana": 1.2, "Iowa": 1.09, "Connecticut": 1.08, "North Dakota": 1.03, "South Dakota": 0.91, "District of Columbia": 0.73, "New York": 0.73, "Michigan": 0.67, "Vermont": 0.59, "Washington": 0.56, "Alaska": 0.39, "Maine": 0.05};
+  STATES.forEach(function (s) { s.stress = BWS[s.name] != null ? BWS[s.name] : null; });
+  var BY_ABBR = {}, BY_FIPS = {};
+  STATES.forEach(function (s) { BY_ABBR[s.abbr] = s; BY_FIPS[s.fips] = s; });
+  var US_AVG_CO2 = 767.2;
+  var US_TOTAL_DC = STATES.reduce(function (a, s) { return a + s.dc; }, 0);
+
+  var METRICS = {
+    dc:   { key: "dc",   label: "Data centers",   title: "Data centers by state", unit: "facilities", src: "Electric Choice, Oct 2026 [8]",
+            ramp: ["#cde2fb","#9ec5f4","#6da7ec","#3987e5","#256abf","#184f95","#0d366b"], fmt: function (v) { return fmt0(v); } },
+    co2:  { key: "co2",  label: "Grid carbon",    title: "Grid carbon intensity by state", unit: "lb CO₂ per MWh", src: "EPA eGRID 2023 [9]",
+            ramp: ["#fde6d9","#f9c6aa","#f3a27b","#eb7a4c","#d95926","#a9431b","#762e12"], fmt: function (v) { return fmt0(Math.round(v)); } },
+    stress: { key: "stress", label: "Water stress", title: "Water stress by state", unit: "WRI score, 0–5", src: "WRI Aqueduct 4.0 [15]",
+            breaks: [1, 2, 3, 4], cats: ["Low", "Low–med", "Med–high", "High", "Extreme"],
+            ramp: ["#efe9f7","#d4c4ec","#ae93da","#8460c0","#57339a"], fmt: function (v) { return v.toFixed(2); } },
+    rain: { key: "rain", label: "Rainfall",       title: "Average yearly rainfall by state", unit: "inches per year", src: "NOAA via Current Results [10]",
+            ramp: ["#d5f3e7","#a6e4cd","#70d1af","#33bb8b","#169b6c","#0f7652","#09523a"], fmt: function (v) { return v.toFixed(1) + '"'; } }
+  };
+  var METRIC_NOTES = {
+    dc: "Virginia and Texas lead the country. Darker states have more data centers.",
+    co2: "Darker states get more carbon per unit of electricity, so extra cooling power does more damage there.",
+    rain: "Lighter states get less rain, so water-hungry cooling puts more pressure on local supplies."
+  };
+
+  var HUBS = [
+    { id: "nova", n: 1, name: "Northern Virginia", short: "N. Virginia", state: "VA", color: "--s1", xy: [819.1, 265.9], labelDx: 16, labelDy: -14,
+      climate: "Temperate and humid, four seasons", opMW: 5574, ucMW: 1067, rain: 43.24, grid: 593, gridName: "SERC Virginia/Carolina",
+      facts: ["Largest hub of the three by far: 5,574 MW operating and 1,067 MW under construction [1]",
+              "Loudoun Water delivered 750+ million gallons of reclaimed water to about 40 customers in 2025 [2]",
+              "Data centers already use about 9% of Loudoun County's drinking water on an average day [2]"],
+      verdict: "Liquid cooling fits well. Water is less scarce and reclaimed water is available, so evaporative cooling can work if it avoids drinking water." },
+    { id: "dfw", n: 2, name: "Dallas–Fort Worth", short: "Dallas–FW", state: "TX", color: "--s2", xy: [482.9, 440.5], labelDx: 16, labelDy: 4,
+      climate: "Hot summers and periodic drought", opMW: 1539, ucMW: 1083, rain: 37.01, grid: 734, gridName: "ERCOT",
+      facts: ["1,539 MW operating and 1,083 MW under construction, so capacity could grow about 70% [1]",
+              "More than 80% of Texas was in drought in 2025 [4]",
+              "Texas data centers used about 25 billion gallons of water in 2025; that could reach 29–161 billion by 2030 [4]"],
+      verdict: "Liquid cooling fits, mainly to protect water during drought. The bigger issue is the grid: extra electricity carries the most carbon of the three." },
+    { id: "phx", n: 3, name: "Phoenix", short: "Phoenix", state: "AZ", color: "--s3", xy: [197.3, 399.7], labelDx: 16, labelDy: 4,
+      climate: "Hot desert, very dry", opMW: 904, ucMW: 1307, rain: 7.22, grid: 704, gridName: "WECC Southwest",
+      facts: ["904 MW operating but 1,307 MW under construction, more than it runs today [1]",
+              "Data center cooling water could rise from about 385 million to 3.7 billion gallons a year within six years [6]",
+              "Microsoft is piloting its zero-water, chip-level cooling design here [7]"],
+      verdict: "Liquid cooling is close to essential. Evaporative cooling strains a scarce supply, and air cooling uses a lot of power in extreme heat." }
+  ];
+
+  var METHODS = [
+    { name: "Air cooling", note: "Fans and chillers", fit: [
+      ["w", "Fine for regular servers; the temperate climate helps, but it struggles with dense AI racks."],
+      ["b", "Hot summers push up electricity use on the most carbon-heavy grid of the three."],
+      ["b", "Extreme heat means the most electricity for cooling."]] },
+    { name: "Evaporative cooling", note: "Water evaporated to remove heat", fit: [
+      ["w", "Workable with reclaimed water, but 75–85% of open-loop cooling water evaporates."],
+      ["w", "Only with non-drinking water; drought puts supply at risk."],
+      ["b", "Least rain and fastest-rising cooling water demand of the three."]] },
+    { name: "Direct-to-chip liquid", note: "Sealed, reused loop · our pick", pick: true, fit: [
+      ["g", "Closed loops lose only 0–5% of their water and handle AI chips."],
+      ["g", "Protects water during drought; pair it with clean power to offset the grid."],
+      ["g", "Being piloted here; may need extra power on the hottest days."]] },
+    { name: "Immersion", note: "Servers in special fluid", fit: [
+      ["w", "Very efficient, but costly, and its fluids raise chemical concerns."],
+      ["w", "Same trade-offs; best suited to brand-new buildings."],
+      ["w", "Uses almost no water, but cost and fluid disposal remain."]] }
+  ];
+
+  var TAKEAWAYS = [
+    ["nova", "Use liquid cooling as the default and keep reclaimed water for any evaporative systems. Watch the share of drinking water data centers use."],
+    ["dfw", "Use liquid cooling to protect water during drought, and pair it with clean power, since this grid carries the most carbon of the three."],
+    ["phx", "Use closed-loop or zero-water designs. With 1,307 MW under construction, choices made now will lock in water use for years."]
+  ];
+
+  var SOURCES = [
+    ["JLL, North America Data Center Report, Midyear 2025 (hub capacity as of June 30, 2025)", "https://realestatedaily-news.com/wp-content/uploads/2025/08/JLL-North-America-Data-Center-Report-Midyear-2025-8.14.25.pdf"],
+    ["Loudoun County, Data Centers: Water Considerations", "https://www.loudoun.gov/6402/Data-Centers-Water-Considerations"],
+    ["U.S. EPA, eGRID 2023 summary data (regional grid emission rates)", "https://epa.gov/egrid/summary-data"],
+    ["Smart Water Magazine, on HARC's Thirsty Data and the Lone Star State (Jan 2026)", "https://smartwatermagazine.com/news/smart-water-magazine/texas-data-center-boom-may-slash-billions-gallons-state-water-supplies"],
+    ["National Weather Service, 1991–2020 normals: Phoenix, Dallas–Fort Worth, Dulles", "https://www.weather.gov/psr/19912020Normals"],
+    ["Phoenix New Times, on Ceres' Drained by Data study", "https://www.phoenixnewtimes.com/news/phoenix-data-center-water-use-surge-nearly-tenfold-study-22762054/"],
+    ["TechRadar, Microsoft reveals new zero-water data center cooling design", "https://www.techradar.com/pro/microsoft-reveals-new-zero-water-datacenter-cooling-design"],
+    ["Electric Choice, U.S. data centers by state (counts as of October 2026)", "https://www.electricchoice.com/datacenters/"],
+    ["U.S. EPA, eGRID 2023 summary tables (state output emission rates)", "https://www.epa.gov/system/files/documents/2025-06/summary_tables_rev2.pdf"],
+    ["Current Results, average annual precipitation by state (NOAA, 1971–2000)", "https://www.currentresults.com/Weather/US/average-annual-state-precipitation.php"],
+    ["NWS Fort Worth, 1991–2020 normals (Dallas–Fort Worth rainfall)", "https://www.weather.gov/fwd/1991-2020_normals"],
+    ["NWS Sterling, Dulles precipitation normals", "https://www.weather.gov/media/lwx/climate/iadprecip.pdf"],
+    ["State boundaries: us-atlas (U.S. Census Bureau cartographic boundaries)", "https://github.com/topojson/us-atlas"],
+    ["AI, Water Stress, and U.S. Data Centers: A Spatial Analysis (independent analysis, 2025): source of the bubble-overlay idea and of the U.S. Aqueduct data extract", "https://chelsearbann.github.io/AI-WaterStress-DataCenter-Analysis"],
+    ["World Resources Institute, Aqueduct 4.0 baseline annual water stress (Kuzma et al., 2023)", "https://doi.org/10.46830/writn.23.00061"]
+  ];
+
+  // tile-map fallback layout [abbr, col, row]
+  var TILES = [
+    ["AK",0,0],["ME",10,0],["WI",5,1],["VT",9,1],["NH",10,1],
+    ["WA",0,2],["ID",1,2],["MT",2,2],["ND",3,2],["MN",4,2],["IL",5,2],["MI",6,2],["NY",8,2],["MA",9,2],
+    ["OR",0,3],["NV",1,3],["WY",2,3],["SD",3,3],["IA",4,3],["IN",5,3],["OH",6,3],["PA",7,3],["NJ",8,3],["CT",9,3],["RI",10,3],
+    ["CA",0,4],["UT",1,4],["CO",2,4],["NE",3,4],["MO",4,4],["KY",5,4],["WV",6,4],["VA",7,4],["MD",8,4],["DE",9,4],
+    ["AZ",1,5],["NM",2,5],["KS",3,5],["AR",4,5],["TN",5,5],["NC",6,5],["SC",7,5],["DC",8,5],
+    ["OK",3,6],["LA",4,6],["MS",5,6],["AL",6,6],["GA",7,6],["HI",0,7],["TX",3,7],["FL",8,7]
+  ];
+  var ATLAS_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3.0.1/states-albers-10m.json";
+
+  // ---------- theme-aware ramps (brighter = more on dark, deeper = more on paper) ----------
+  METRICS.dc.rampDark = ["#15273a", "#1c3a56", "#245176", "#2c6a98", "#3b86ba", "#5aa6d6", "#8ccaf0"];
+  METRICS.co2.rampDark = ["#2c1c15", "#482617", "#68321b", "#8c411f", "#b45528", "#da7140", "#f5a173"];
+  METRICS.stress.rampDark = ["#221b2e", "#3b2c55", "#5a4282", "#8061b3", "#b294e6"];
+  METRIC_NOTES.stress = "Stronger shading means local water demand takes a bigger share of available supply, so water-hungry cooling competes harder with homes and farms. Hawaii is not covered.";
+  METRICS.rain.rampDark = ["#10261f", "#133a2e", "#17503f", "#1c6a52", "#238566", "#34a37e", "#63c9a2"];
+  METRIC_NOTES.dc = "Virginia and Texas lead the country. Stronger shading means more data centers.";
+  METRIC_NOTES.co2 = "Stronger shading means more carbon per unit of electricity, so extra cooling power does more damage there.";
+  METRIC_NOTES.rain = "Fainter states get less rain, so water-hungry cooling puts more pressure on local supplies.";
+
+  // ===================== STATE =====================
+  var metric = "dc";
+  var view = { type: "hub", id: "phx" };   // or {type:"state", abbr:"CA"}
+  var mapMode = "loading";                 // "svg" | "tiles"
+  var showBubbles = true;
+  var tableSort = { key: "dc", dir: "descending" };
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ===================== HELPERS =====================
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt0(n) { return Number(n).toLocaleString("en-US"); }
+  function hub(id) { return HUBS.filter(function (h) { return h.id === id; })[0]; }
+  function hubForState(abbr) { return HUBS.filter(function (h) { return h.state === abbr; })[0]; }
+  function cite(s) { return s.replace(/\[(\d+)\]/g, '<a href="#src-$1" aria-label="source $1"><sup>$1</sup></a>'); }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+  function hc(h) { return ' style="--hc:var(' + h.color + ')"'; }
+  function isDark() { return document.documentElement.getAttribute("data-theme") !== "light"; }
+  function ramp(k) { return isDark() ? METRICS[k].rampDark : METRICS[k].ramp; }
+
+  var tip = $("tip");
+  function showTip(e, html) {
+    if (tip.innerHTML !== html) tip.innerHTML = html;
+    tip.classList.add("show");
+    var x = e.clientX + 18, y = e.clientY + 18;
+    if (x + tip.offsetWidth > window.innerWidth - 8) x = e.clientX - tip.offsetWidth - 14;
+    if (y + tip.offsetHeight > window.innerHeight - 8) y = e.clientY - tip.offsetHeight - 14;
+    tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+  }
+  function hideTip() { tip.classList.remove("show"); }
+
+  // quantile classes per metric
+  var CLASSES = {};
+  Object.keys(METRICS).forEach(function (k) {
+    var vals = STATES.map(function (s) { return s[k]; }).filter(function (v) { return v != null; }).sort(function (a, b) { return a - b; });
+    var n = METRICS[k].ramp.length, br = [];
+    if (METRICS[k].breaks) br = METRICS[k].breaks.slice();
+    else for (var i = 1; i < n; i++) br.push(vals[Math.floor(i * vals.length / n)]);
+    CLASSES[k] = { breaks: br, min: vals[0], max: vals[vals.length - 1] };
+  });
+  function classOf(k, v) {
+    if (v == null) return -1;
+    var br = CLASSES[k].breaks, i = 0;
+    while (i < br.length && v >= br[i]) i++;
+    return i;
+  }
+  function colorOf(k, v) { var c = classOf(k, v); return c < 0 ? "var(--empty)" : ramp(k)[c]; }
+  function textOn(k, v) {
+    var hi = classOf(k, v) >= METRICS[k].ramp.length - 3;
+    return isDark() ? (hi ? "#0a0e12" : "#ece7dc") : (hi ? "#ffffff" : "#12171b");
+  }
+  function rankOf(k, abbr) {
+    var arr = STATES.filter(function (s) { return s[k] != null; }).sort(function (a, b) { return b[k] - a[k]; });
+    for (var i = 0; i < arr.length; i++) if (arr[i].abbr === abbr) return { r: i + 1, of: arr.length };
+    return null;
+  }
+
+  function stateTip(s) {
+    var rows = ["dc", "co2", "stress", "rain"].map(function (k) {
+      var m = METRICS[k], v = s[k];
+      return '<div class="tr' + (k === metric ? " on" : "") + '"><span>' + m.label + '</span><span>' + (v == null ? "n/a" : m.fmt(v)) + '</span></div>';
+    }).join("");
+    var h = hubForState(s.abbr);
+    return '<b>' + esc(s.name) + '</b>' + rows + (h ? '<div style="margin-top:6px;opacity:.8">Home of hub ' + h.n + ': ' + h.name + '</div>' : "");
+  }
+
+  // ===================== TOPOJSON (minimal decoder) =====================
+  function decodeArcs(topo) {
+    var t = topo.transform;
+    return topo.arcs.map(function (arc) {
+      var x = 0, y = 0;
+      return arc.map(function (p) {
+        if (t) { x += p[0]; y += p[1]; return [x * t.scale[0] + t.translate[0], y * t.scale[1] + t.translate[1]]; }
+        return [p[0], p[1]];
+      });
+    });
+  }
+  function ringPts(ring, arcs) {
+    var pts = [];
+    ring.forEach(function (i, k) {
+      var a = i < 0 ? arcs[~i].slice().reverse() : arcs[i];
+      a.forEach(function (p, j) { if (k > 0 && j === 0) return; pts.push(p); });
+    });
+    return pts;
+  }
+  function ringD(ring, arcs) {
+    return "M" + ringPts(ring, arcs).map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join("L") + "Z";
+  }
+  function geomCentroid(g, arcs) {
+    var outers = g.type === "Polygon" ? [g.arcs[0]] : g.type === "MultiPolygon" ? g.arcs.map(function (p) { return p[0]; }) : [];
+    var best = null, bestA = 0;
+    outers.forEach(function (ring) {
+      var pts = ringPts(ring, arcs), a = 0, cx = 0, cy = 0;
+      for (var i = 0, n = pts.length; i < n; i++) {
+        var p = pts[i], q = pts[(i + 1) % n], c = p[0] * q[1] - q[0] * p[1];
+        a += c; cx += (p[0] + q[0]) * c; cy += (p[1] + q[1]) * c;
+      }
+      if (Math.abs(a) > bestA && a !== 0) { bestA = Math.abs(a); best = [cx / (3 * a), cy / (3 * a)]; }
+    });
+    return best;
+  }
+  function geomD(g, arcs) {
+    if (g.type === "Polygon") return g.arcs.map(function (r) { return ringD(r, arcs); }).join("");
+    if (g.type === "MultiPolygon") return g.arcs.map(function (poly) { return poly.map(function (r) { return ringD(r, arcs); }).join(""); }).join("");
+    return "";
+  }
+
+  // ===================== MAP =====================
+  function drawSvgMap(topo) {
+    var arcs = decodeArcs(topo);
+    var geoms = (topo.objects.states || topo.objects[Object.keys(topo.objects)[0]]).geometries;
+    var maxDc = Math.max.apply(null, STATES.map(function (s) { return s.dc; }));
+    var bubbles = [];
+    var paths = geoms.map(function (g) {
+      var fips = String(g.id).padStart(2, "0"), s = BY_FIPS[fips];
+      if (!s) return "";
+      var c = geomCentroid(g, arcs);
+      if (c) bubbles.push({ s: s, x: c[0], y: c[1], r: Math.max(2.5, Math.sqrt(s.dc / maxDc) * 30) });
+      return '<path class="state" data-st="' + s.abbr + '" d="' + geomD(g, arcs) + '"></path>';
+    }).join("");
+    bubbles.sort(function (a, b) { return b.r - a.r; });
+    var bubbleSvg = bubbles.map(function (b, i) {
+      return '<circle class="bubble" style="--i:' + i + '" cx="' + b.x.toFixed(1) + '" cy="' + b.y.toFixed(1) + '" r="' + b.r.toFixed(1) + '"></circle>';
+    }).join("");
+    var pins = HUBS.map(function (h) {
+      return '<g class="pin" data-hub="' + h.id + '"' + hc(h) + ' transform="translate(' + h.xy[0] + ',' + h.xy[1] + ')" tabindex="0" role="button" aria-label="Hub ' + h.n + ': ' + h.name + '">' +
+        '<circle class="ring" r="13"></circle><circle class="dotc" r="11"></circle><text>' + h.n + '</text>' +
+        '<text class="plabel" x="' + h.labelDx + '" y="' + h.labelDy + '">' + h.short + '</text></g>';
+    }).join("");
+    $("map").innerHTML = '<svg viewBox="0 0 975 610"><g id="states">' + paths + '</g><g id="bubbles">' + bubbleSvg + '</g><g id="pins">' + pins + '</g></svg>';
+    mapMode = "svg";
+    paintMap();
+    sizePins();
+  }
+
+  function sizePins() {
+    var svg = document.querySelector("#map svg");
+    if (!svg || !svg.clientWidth) return;
+    var k = Math.min(2.8, Math.max(1, 975 / svg.clientWidth * 0.62));
+    var small = svg.clientWidth < 520;
+    HUBS.forEach(function (h) {
+      var g = svg.querySelector('.pin[data-hub="' + h.id + '"]');
+      if (!g) return;
+      g.setAttribute("transform", "translate(" + h.xy[0] + "," + h.xy[1] + ") scale(" + k.toFixed(2) + ")");
+      var lab = g.querySelector(".plabel");
+      if (lab) lab.style.display = small ? "none" : "";
+    });
+  }
+  window.addEventListener("resize", sizePins);
+
+  function drawTileMap() {
+    var html = '<div class="tilemap">';
+    for (var r = 0; r < 8; r++) for (var c = 0; c < 11; c++) {
+      var t = TILES.filter(function (x) { return x[1] === c && x[2] === r; })[0];
+      if (!t) { html += '<div aria-hidden="true"></div>'; continue; }
+      var s = BY_ABBR[t[0]], h = hubForState(t[0]);
+      html += '<button type="button" class="tile" data-st="' + t[0] + '" aria-label="' + s.name + '">' + (h ? h.n : t[0]) + '</button>';
+    }
+    $("map").innerHTML = html + '</div>';
+    mapMode = "tiles";
+    paintMap();
+  }
+
+  function paintMap() {
+    var m = METRICS[metric];
+    $("maptitle").textContent = m.title;
+    $("mapsource").innerHTML = cite(m.src);
+    $("mapnote").textContent = METRIC_NOTES[metric] + (mapMode === "tiles" ? " (Simplified tile map shown because the detailed map could not load; numbers on tiles mark the three hubs.)" : "");
+    var selAbbr = view.type === "state" ? view.abbr : null;
+    var els = document.querySelectorAll("#map [data-st]");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i], s = BY_ABBR[el.getAttribute("data-st")], v = s[metric];
+      if (mapMode === "svg") el.style.fill = colorOf(metric, v);
+      else { el.style.background = colorOf(metric, v); el.style.color = v == null ? "var(--text-3)" : textOn(metric, v); }
+      el.classList.toggle("sel", s.abbr === selAbbr || (view.type === "hub" && mapMode === "tiles" && hub(view.id).state === s.abbr));
+    }
+    var pins = document.querySelectorAll("#map .pin");
+    for (var j = 0; j < pins.length; j++) pins[j].classList.toggle("on", view.type === "hub" && pins[j].getAttribute("data-hub") === view.id);
+    if (mapMode === "svg" && selAbbr) {
+      var p = document.querySelector('#map path[data-st="' + selAbbr + '"]');
+      if (p) p.parentNode.appendChild(p);
+    }
+    renderLegend();
+  }
+
+  function renderLegend() {
+    var m = METRICS[metric], c = CLASSES[metric], edges = [c.min].concat(c.breaks);
+    var bins = ramp(metric).map(function (col, i) {
+      var lo = edges[i];
+      var lab = m.cats ? m.cats[i] : (metric === "rain" ? lo.toFixed(0) + '"' : fmt0(Math.round(lo))) + (i === 0 ? "" : "+");
+      return '<div class="bin"><i style="background:' + col + '"></i><span>' + lab + '</span></div>';
+    }).join("");
+    var bub = "";
+    if (mapMode === "svg" && showBubbles) {
+      var maxDc = Math.max.apply(null, STATES.map(function (s) { return s.dc; }));
+      bub = '<span class="bub">' + [50, 200, 500].map(function (v) {
+        var r = Math.max(2.5, Math.sqrt(v / maxDc) * 30) * mapScale();
+        return '<svg width="' + (2 * r + 2) + '" height="' + (2 * r + 2) + '"><circle class="bubble" cx="' + (r + 1) + '" cy="' + (r + 1) + '" r="' + r + '"></circle></svg>' + v;
+      }).join(" ") + ' data centers</span>';
+    }
+    $("legend").innerHTML = '<span>' + m.unit + '</span><div class="bins">' + bins + '</div>' +
+      (metric === "rain" ? '<span class="na"><i></i>No data (DC)</span>' : metric === "stress" ? '<span class="na"><i></i>No data (HI)</span>' : "") + bub;
+  }
+  function mapScale() {
+    var svg = document.querySelector("#map svg");
+    return svg && svg.clientWidth ? svg.clientWidth / 975 : 0.7;
+  }
+
+  // ===================== PANEL =====================
+  function renderPanel() {
+    var html, panel = $("panel");
+    if (view.type === "hub") {
+      var h = hub(view.id);
+      panel.style.setProperty("--hc", "var(" + h.color + ")");
+      html = '<p class="kicker">Hub ' + h.n + ' of 3</p>' +
+        '<h3><span class="pinnum"' + hc(h) + '>' + h.n + '</span>' + h.name + '</h3>' +
+        '<p class="climate">' + h.climate + '</p>' +
+        '<div class="kv kv4">' +
+          '<div><b>' + fmt0(h.opMW + h.ucMW) + '</b><small>MW operating + under construction</small></div>' +
+          '<div><b>' + h.rain.toFixed(1) + '"</b><small>rain per year</small></div>' +
+          '<div><b>' + h.grid + '</b><small>lb CO₂ per MWh, ' + h.gridName + '</small></div>' +
+          '<div><b>' + BY_ABBR[h.state].stress.toFixed(1) + '</b><small>water stress (0–5), ' + BY_ABBR[h.state].name + ' average</small></div>' +
+        '</div>' +
+        '<ul>' + h.facts.map(function (f) { return '<li>' + cite(f) + '</li>'; }).join("") + '</ul>' +
+        '<div class="verdict"><b>Cooling verdict</b>' + h.verdict + '</div>' +
+        '<button class="linkbtn" type="button" data-state="' + h.state + '">See statewide numbers for ' + BY_ABBR[h.state].name + '</button>';
+    } else {
+      var s = BY_ABBR[view.abbr], hh = hubForState(s.abbr);
+      panel.style.setProperty("--hc", "var(--water)");
+      var cells = ["dc", "co2", "stress", "rain"].map(function (k) {
+        var m = METRICS[k], v = s[k], rk = rankOf(k, s.abbr);
+        return '<div><b>' + (v == null ? "n/a" : m.fmt(v)) + '</b><small>' + (k === "dc" ? "data centers" : k === "co2" ? "lb CO₂ per MWh" : k === "stress" ? "water stress (0–5)" : "rain per year") + '</small>' +
+          (rk ? '<em>#' + rk.r + ' of ' + rk.of + (k === "co2" ? " (1 = dirtiest)" : k === "rain" ? " (1 = wettest)" : k === "stress" ? " (1 = most stressed)" : "") + '</em>' : "") + '</div>';
+      }).join("");
+      var share = (s.dc / US_TOTAL_DC * 100);
+      var lines = [];
+      lines.push("About " + (share >= 1 ? share.toFixed(0) : share.toFixed(1)) + "% of the " + fmt0(US_TOTAL_DC) + " data centers in this count.");
+      lines.push("Grid carbon is " + (s.co2 < US_AVG_CO2 ? "below" : "above") + " the U.S. average of " + fmt0(Math.round(US_AVG_CO2)) + " lb CO₂ per MWh.");
+      if (s.stress != null) lines.push(s.stress >= 3 ? "High water stress: evaporative cooling would compete directly with other water users." : s.stress >= 2 ? "Medium-high water stress: water-hungry cooling needs non-drinking water and care in drought years." : "Lower water stress: water is less of a constraint, so energy and grid carbon matter more.");
+      else lines.push("Water stress data does not cover this state.");
+      html = '<p class="kicker">State profile</p><h3>' + esc(s.name) + '</h3>' +
+        '<div class="kv kv4">' + cells + '</div>' +
+        '<ul>' + lines.map(function (l) { return '<li>' + l + '</li>'; }).join("") + '</ul>' +
+        (hh ? '<button class="linkbtn" type="button" data-hub="' + hh.id + '">Open hub ' + hh.n + ': ' + hh.name + '</button>' : '<button class="linkbtn" type="button" data-hub="phx">Back to the three hubs</button>');
+    }
+    panel.innerHTML = html;
+  }
+
+  // ===================== CONTROLS =====================
+  function renderControls() {
+    $("metricseg").innerHTML = Object.keys(METRICS).map(function (k) {
+      return '<button type="button" data-metric="' + k + '" aria-pressed="' + (k === metric) + '">' + METRICS[k].label + '</button>';
+    }).join("");
+    $("hubpicks").innerHTML = HUBS.map(function (h) {
+      var on = view.type === "hub" && view.id === h.id;
+      return '<button type="button" class="hubpick" data-hub="' + h.id + '"' + hc(h) + ' aria-pressed="' + on + '"><span class="pinnum">' + h.n + '</span>' + h.name + '</button>';
+    }).join("");
+    var cards = document.querySelectorAll("#hubstrip .hubcard");
+    for (var i = 0; i < cards.length; i++) cards[i].setAttribute("aria-pressed", view.type === "hub" && cards[i].getAttribute("data-hub") === view.id);
+  }
+
+  function renderHeroStats() {
+    var top = STATES.slice().sort(function (a, b) { return b.dc - a.dc; });
+    var pct = Math.round((top[0].dc + top[1].dc) / US_TOTAL_DC * 100);
+    $("herostats").innerHTML =
+      '<div class="hs"><b data-count="' + US_TOTAL_DC + '" data-hero>' + fmt0(US_TOTAL_DC) + '</b><span>data centers mapped across 50 states and DC</span></div>' +
+      '<div class="hs"><b data-count="' + pct + '" data-suffix="%" data-hero>' + pct + '%</b><span>of them in just two states, ' + top[0].name + ' and ' + top[1].name + '</span></div>' +
+      '<div class="hs"><b data-count="3" data-suffix=" hubs" data-hero>3 hubs</b><span>Northern Virginia, Dallas–Fort Worth and Phoenix compared</span></div>';
+  }
+
+  function renderTicker() {
+    var phx = hub("phx"), nova = hub("nova"), dfw = hub("dfw");
+    var items = [
+      [fmt0(US_TOTAL_DC), "data centers counted"],
+      [fmt0(nova.opMW) + " MW", "operating in Northern Virginia"],
+      [phx.rain.toFixed(1) + '"', "of rain a year in Phoenix"],
+      [fmt0(phx.ucMW) + " MW", "under construction in Phoenix"],
+      ["80%+", "of Texas in drought in 2025"],
+      [BY_ABBR.AZ.stress.toFixed(2) + " / 5", "water stress in Arizona (WRI)"],
+      ["0–5%", "water lost by closed liquid loops"],
+      ["75–85%", "of open-loop cooling water evaporates"],
+      [String(dfw.grid), "lb CO₂/MWh on the ERCOT grid"]
+    ];
+    var one = items.map(function (i) { return '<span><b>' + i[0] + '</b>' + i[1] + '</span>'; }).join("");
+    $("ticker").innerHTML = one + one;
+  }
+
+  function renderHubStrip() {
+    $("hubstrip").innerHTML = HUBS.map(function (h) {
+      var share = Math.round(h.ucMW / (h.opMW + h.ucMW) * 100);
+      return '<button type="button" class="hubcard" data-hub="' + h.id + '"' + hc(h) + ' aria-pressed="false">' +
+        '<span class="top"><span>Hub 0' + h.n + ' · ' + BY_ABBR[h.state].name + '</span><span class="pinnum">' + h.n + '</span></span>' +
+        '<h3>' + h.name + '</h3><p class="clim">' + h.climate + '</p>' +
+        '<span class="nums">' +
+          '<span><b>' + fmt0(h.opMW) + '</b><small>MW operating</small></span>' +
+          '<span><b>' + h.rain.toFixed(1) + '"</b><small>rain / year</small></span>' +
+          '<span><b>' + h.grid + '</b><small>lb CO₂/MWh</small></span>' +
+        '</span>' +
+        '<span class="gauge" aria-hidden="true"><i style="--w:' + share + '%"></i></span>' +
+        '<span class="gl"><span>Pipeline share</span><span>' + share + '% under construction</span></span>' +
+      '</button>';
+    }).join("");
+  }
+
+  // ===================== STATE TABLE =====================
+  function renderStateTable() {
+    var cols = [["name", "State", false], ["dc", "Data centers", true], ["co2", "Grid lb CO₂/MWh", true], ["stress", "Water stress 0–5", true], ["rain", "Rain in/yr", true]];
+    var rows = STATES.slice().sort(function (a, b) {
+      var k = tableSort.key, d = tableSort.dir === "ascending" ? 1 : -1;
+      if (k === "name") return a.name.localeCompare(b.name) * d;
+      var av = a[k] == null ? -Infinity : a[k], bv = b[k] == null ? -Infinity : b[k];
+      return (av - bv) * d;
+    });
+    var head = cols.map(function (c) {
+      var sort = tableSort.key === c[0] ? tableSort.dir : "none";
+      return '<th class="' + (c[2] ? "num" : "") + '" aria-sort="' + sort + '"><button type="button" data-sort="' + c[0] + '">' + c[1] + '</button></th>';
+    }).join("");
+    var body = rows.map(function (s) {
+      var h = hubForState(s.abbr);
+      return '<tr data-state="' + s.abbr + '"' + (h ? ' class="hubrow"' : "") + '><td>' + esc(s.name) + (h ? ' <span class="pinnum" style="--hc:var(' + h.color + ');width:20px;height:20px;font-size:10px;background:var(--hc);color:#0a0e12;margin-left:6px">' + h.n + '</span>' : "") + '</td>' +
+        '<td class="num">' + fmt0(s.dc) + '</td><td class="num">' + fmt0(Math.round(s.co2)) + '</td><td class="num">' + (s.stress == null ? "n/a" : s.stress.toFixed(2)) + '</td><td class="num">' + (s.rain == null ? "n/a" : s.rain.toFixed(1)) + '</td></tr>';
+    }).join("");
+    $("statetable").innerHTML = '<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
+  }
+
+  // ===================== HUB CHARTS =====================
+  function barChart(el, title, unit, rows, max, opts) {
+    opts = opts || {};
+    var selHub = view.type === "hub" ? view.id : null;
+    var html = '<h3>' + title + '</h3><p class="unit">' + unit + '</p><div class="bars">';
+    rows.forEach(function (r) {
+      var h = hub(r.id), dim = selHub && r.id !== selHub ? ' style="opacity:.4"' : "";
+      html += '<div class="row"' + dim + '><span class="lab">' + h.short + '</span><div class="track">';
+      var left = 0, total = 0;
+      r.segs.forEach(function (s, i) {
+        var w = s.v / max * 100, gap = i ? 2 : 0;
+        html += '<div class="bar' + (s.hatch ? " hatch" : "") + '" style="left:calc(' + left + '% + ' + gap + 'px);width:calc(' + w + '% - ' + gap + 'px);background-color:var(' + h.color + ');' +
+          (i < r.segs.length - 1 ? "border-radius:4px 0 0 4px" : "") + '"></div>';
+        left += w; total += s.v;
+      });
+      html += '<div class="hit" data-tip="' + encodeURIComponent(r.tip) + '"></div></div><span class="val">' + (opts.label ? opts.label(total) : fmt0(total)) + '</span></div>';
+    });
+    if (opts.ref) {
+      var x = opts.ref.v / max * 100;
+      html += '<div class="refwrap" aria-hidden="true"><div class="refline" style="left:' + x + '%"></div><span class="reflab" style="left:' + x + '%">' + opts.ref.label + '</span></div>';
+    }
+    html += '</div>' + (opts.legend ? '<div class="chartlegend">' + opts.legend + '</div>' : "");
+    el.innerHTML = html;
+  }
+  function renderCharts() {
+    barChart($("chart-cap"), "Data center capacity", "Megawatts (MW), mid-2025", HUBS.map(function (h) {
+      return { id: h.id, segs: [{ v: h.opMW }, { v: h.ucMW, hatch: true }], tip: "<b>" + h.name + "</b><br>Operating: " + fmt0(h.opMW) + " MW<br>Under construction: " + fmt0(h.ucMW) + " MW" };
+    }), 6800, { legend: '<span><i></i>Operating</span><span><i class="hatch"></i>Under construction</span>' });
+    barChart($("chart-rain"), "Annual rainfall", "Inches per year, 1991–2020 normals", HUBS.map(function (h) {
+      return { id: h.id, segs: [{ v: h.rain }], tip: "<b>" + h.name + "</b><br>" + h.rain + " inches of rain a year" };
+    }), 50, { label: function (t) { return t.toFixed(1) + '"'; } });
+    barChart($("chart-grid"), "Grid carbon intensity", "lb CO₂ per MWh, 2023 (lower is cleaner)", HUBS.map(function (h) {
+      return { id: h.id, segs: [{ v: h.grid }], tip: "<b>" + h.name + "</b><br>" + h.gridName + " grid: " + h.grid + " lb CO₂/MWh<br>U.S. average: 767" };
+    }), 900, { ref: { v: US_AVG_CO2, label: "U.S. avg 767" } });
+  }
+
+  // ===================== MATRIX, TAKEAWAYS, SOURCES =====================
+  var CHIP = { g: ["good", "✓", "Good fit"], w: ["warn", "!", "Use with caution"], b: ["bad", "✕", "Poor fit"] };
+  function renderMatrix() {
+    var html = '<table><thead><tr><th>Cooling method</th>' + HUBS.map(function (h) {
+      return '<th' + hc(h) + '><span class="dotx" style="background:var(' + h.color + ')"></span>' + h.name + '</th>';
+    }).join("") + '</tr></thead><tbody>';
+    METHODS.forEach(function (m) {
+      html += '<tr' + (m.pick ? ' class="pick"' : "") + '><th>' + m.name + '<small>' + m.note + '</small></th>' + m.fit.map(function (f, i) {
+        var c = CHIP[f[0]];
+        return '<td' + hc(HUBS[i]) + '><span class="chip ' + c[0] + '"><span aria-hidden="true">' + c[1] + '</span>' + c[2] + '</span><span class="why">' + f[1] + '</span></td>';
+      }).join("") + '</tr>';
+    });
+    $("matrix").innerHTML = html + '</tbody></table>';
+  }
+  function renderTakeaways() {
+    $("takeaways").innerHTML = TAKEAWAYS.map(function (t, i) {
+      var h = hub(t[0]);
+      return '<div class="takeaway rv" style="--d:' + i + ';--hc:var(' + h.color + ')"><h3><span class="pinnum">' + h.n + '</span>' + h.name + '</h3><p>' + t[1] + '</p></div>';
+    }).join("");
+  }
+  function renderSources() {
+    $("sources").innerHTML = SOURCES.map(function (s, i) {
+      return '<li id="src-' + (i + 1) + '"><a href="' + s[1] + '" target="_blank" rel="noopener">' + s[0] + '</a></li>';
+    }).join("");
+  }
+
+  // ===================== STATE-BY-STATE ANALYSIS =====================
+  var REGION_LISTS = {
+    Northeast: ["CT","ME","MA","NH","RI","VT","NJ","NY","PA"],
+    Midwest: ["IL","IN","MI","OH","WI","IA","KS","MN","MO","NE","ND","SD"],
+    South: ["DE","DC","FL","GA","MD","NC","SC","VA","WV","AL","KY","MS","TN","AR","LA","OK","TX"],
+    West: ["AZ","CO","ID","MT","NV","NM","UT","WY","AK","CA","HI","OR","WA"]
+  };
+  var REGIONS = [
+    { name: "Northeast", color: "--s1", shape: "circle" },
+    { name: "Midwest", color: "--s2", shape: "square" },
+    { name: "South", color: "--s3", shape: "triangle" },
+    { name: "West", color: "--s4", shape: "diamond" }
+  ];
+  var REGION_OF = {};
+  Object.keys(REGION_LISTS).forEach(function (r) { REGION_LISTS[r].forEach(function (a) { REGION_OF[a] = r; }); });
+  function regionMeta(abbr) { return REGIONS.filter(function (r) { return r.name === REGION_OF[abbr]; })[0]; }
+  var dcShowAll = false, scatterY = "co2";
+
+  function hbars(el, rows, max, valFmt, color) {
+    el.innerHTML = rows.map(function (r, i) {
+      var s = r.s, h = hubForState(s.abbr);
+      return '<div class="hrow' + (h ? " hub" : "") + '" data-tip="' + encodeURIComponent(r.tip) + '" data-state="' + s.abbr + '" style="cursor:pointer;--i:' + i + '">' +
+        '<span class="lab">' + (h ? '<span class="pinnum" style="width:16px;height:16px;font-size:9px;margin-right:6px;background:var(' + h.color + ');color:#0a0e12">' + h.n + '</span>' : "") + esc(r.label || s.name) + '</span>' +
+        '<span class="trk"><span class="fill" style="width:' + (r.v / max * 100) + '%;background:' + color + '"></span></span>' +
+        '<span class="v">' + valFmt(r.v) + '</span></div>';
+    }).join("");
+  }
+
+  function renderDcBars() {
+    var rows = STATES.slice().sort(function (a, b) { return b.dc - a.dc; });
+    if (!dcShowAll) rows = rows.slice(0, 15);
+    var max = rows[0].dc;
+    hbars($("an-dc"), rows.map(function (s) {
+      return { s: s, v: s.dc, tip: "<b>" + esc(s.name) + "</b><br>" + fmt0(s.dc) + " data centers (" + (s.dc / US_TOTAL_DC * 100).toFixed(1) + "% of U.S.)" };
+    }), max, fmt0, "var(--s1)");
+    $("dcall").textContent = dcShowAll ? "Top 15" : "Show all 51";
+  }
+
+  function renderDry() {
+    var rows = STATES.filter(function (s) { return s.stress != null && s.stress >= 3; }).sort(function (a, b) { return b.dc - a.dc; });
+    var max = rows[0].dc;
+    hbars($("an-dry"), rows.map(function (s) {
+      return { s: s, v: s.dc, label: s.name + " · " + s.stress.toFixed(1),
+        tip: "<b>" + esc(s.name) + "</b><br>" + fmt0(s.dc) + " data centers<br>Water stress " + s.stress.toFixed(2) + " of 5" };
+    }), max, fmt0, "#8460c0");
+  }
+
+  function renderCarbonRisk() {
+    var rows = STATES.map(function (s) { return { s: s, v: s.dc * s.co2 / US_AVG_CO2 }; })
+      .sort(function (a, b) { return b.v - a.v; }).slice(0, 12);
+    var max = rows[0].v;
+    hbars($("an-carbon"), rows.map(function (r) {
+      var s = r.s;
+      return { s: s, v: r.v, tip: "<b>" + esc(s.name) + "</b><br>" + fmt0(s.dc) + " data centers × " + fmt0(Math.round(s.co2)) + " lb CO₂/MWh<br>= " + fmt0(Math.round(r.v)) + " at U.S.-average carbon" };
+    }), max, function (v) { return fmt0(Math.round(v)); }, "var(--s2)");
+  }
+
+  function shapeSvg(shape, x, y, r, color) {
+    x = Math.round(Number(x) * 10) / 10; y = Math.round(Number(y) * 10) / 10;
+    var st = ' class="pt" style="fill:var(' + color + ')"';
+    if (shape === "circle") return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '"' + st + '/>';
+    if (shape === "square") return '<rect x="' + (x - r * .9) + '" y="' + (y - r * .9) + '" width="' + (r * 1.8) + '" height="' + (r * 1.8) + '"' + st + '/>';
+    if (shape === "triangle") return '<path d="M' + x + ',' + (y - r * 1.15) + 'L' + (x + r * 1.1) + ',' + (y + r * .8) + 'L' + (x - r * 1.1) + ',' + (y + r * .8) + 'Z"' + st + '/>';
+    return '<path d="M' + x + ',' + (y - r * 1.2) + 'L' + (x + r * 1.1) + ',' + y + 'L' + x + ',' + (y + r * 1.2) + 'L' + (x - r * 1.1) + ',' + y + 'Z"' + st + '/>';
+  }
+
+  function renderScatter() {
+    var W = 520, H = 330, L = 50, R = 16, T = 12, B = 42;
+    var xmin = Math.log10(5), xmax = Math.log10(700);
+    var ycfg = scatterY === "co2"
+      ? { max: 2000, ticks: [0, 500, 1000, 1500, 2000], title: "Grid carbon (lb CO₂ per MWh)", fmt: fmt0 }
+      : scatterY === "stress" ? { max: 5, ticks: [0, 1, 2, 3, 4, 5], title: "Water stress (WRI, 0–5)", fmt: function (v) { return v; } }
+      : { max: 70, ticks: [0, 20, 40, 60], title: "Rainfall (inches per year)", fmt: function (v) { return v; } };
+    var X = function (v) { return L + (Math.log10(v) - xmin) / (xmax - xmin) * (W - L - R); };
+    var Y = function (v) { return T + (1 - v / ycfg.max) * (H - T - B); };
+    var g = "";
+    ycfg.ticks.forEach(function (t) {
+      g += '<line class="ax" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(t) + '" y2="' + Y(t) + '"/>' +
+           '<text class="tk" x="' + (L - 6) + '" y="' + (Y(t) + 4) + '" text-anchor="end">' + ycfg.fmt(t) + '</text>';
+    });
+    [10, 30, 100, 300].forEach(function (t) {
+      g += '<text class="tk" x="' + X(t) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + t + '</text>';
+    });
+    g += '<text class="at" x="' + ((L + W - R) / 2) + '" y="' + (H - 4) + '" text-anchor="middle">Data centers (log scale)</text>';
+    g += '<text class="at" transform="translate(12,' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle">' + ycfg.title + '</text>';
+    if (scatterY === "co2") {
+      g += '<line class="ref" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(US_AVG_CO2) + '" y2="' + Y(US_AVG_CO2) + '"/>' +
+           '<text class="tk reft" x="' + (W - R) + '" y="' + (Y(US_AVG_CO2) - 6) + '" text-anchor="end">U.S. average</text>';
+    }
+    var labelSet = scatterY === "co2" ? ["VA", "TX", "CA", "AZ", "WV", "VT", "OH"] : scatterY === "stress" ? ["VA", "TX", "CA", "AZ", "NV", "NE", "WA"] : ["VA", "TX", "CA", "AZ", "NV", "HI"];
+    var pts = STATES.filter(function (s) { return s[scatterY] != null; });
+    pts.forEach(function (s, i) {
+      var rm = regionMeta(s.abbr), x = X(s.dc), y = Y(s[scatterY]);
+      var tipH = "<b>" + esc(s.name) + "</b> · " + rm.name + "<br>" + fmt0(s.dc) + " data centers<br>" +
+        (scatterY === "co2" ? fmt0(Math.round(s.co2)) + " lb CO₂/MWh" : scatterY === "stress" ? "Water stress " + s.stress.toFixed(2) + " of 5" : s.rain.toFixed(1) + " in of rain a year");
+      g += '<g data-tip="' + encodeURIComponent(tipH) + '" data-state="' + s.abbr + '" style="cursor:pointer;--i:' + i + '">' + shapeSvg(rm.shape, x.toFixed(1), y.toFixed(1), 5.5, rm.color) +
+        '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="11" fill="transparent"/></g>';
+      if (labelSet.indexOf(s.abbr) >= 0) {
+        var right = x < W - 60;
+        g += '<text class="pl" x="' + (x + (right ? 9 : -9)).toFixed(1) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="' + (right ? "start" : "end") + '">' + s.abbr + '</text>';
+      }
+    });
+    $("an-scatter").className = "scatter";
+    $("an-scatter").innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Scatter plot of data centers against ' + ycfg.title + ' by state">' + g + '</svg>';
+    $("scatterlegend").innerHTML = REGIONS.map(function (r) {
+      return '<span><svg class="shape" viewBox="-6 -7 12 14">' + shapeSvg(r.shape, 0, 0, 5, r.color).replace('class="pt"', "") + '</svg>' + r.name + '</span>';
+    }).join("");
+    var btns = document.querySelectorAll("#scatterseg button");
+    for (var i = 0; i < btns.length; i++) btns[i].setAttribute("aria-pressed", btns[i].getAttribute("data-sy") === scatterY);
+  }
+
+  function renderAnalysis() { renderDcBars(); renderScatter(); renderDry(); renderCarbonRisk(); }
+
+  function update() { renderControls(); paintMap(); renderPanel(); renderCharts(); }
+
+  // ===================== EVENTS =====================
+  document.addEventListener("click", function (e) {
+    var t;
+    if ((t = e.target.closest("[data-metric]"))) { metric = t.getAttribute("data-metric"); update(); return; }
+    if ((t = e.target.closest("[data-hub]"))) { view = { type: "hub", id: t.getAttribute("data-hub") }; update(); return; }
+    if ((t = e.target.closest("[data-sort]"))) {
+      var k = t.getAttribute("data-sort");
+      tableSort = { key: k, dir: tableSort.key === k && tableSort.dir === "descending" ? "ascending" : (k === "name" ? "ascending" : "descending") };
+      renderStateTable(); return;
+    }
+    if ((t = e.target.closest("[data-st], [data-state]"))) {
+      var abbr = t.getAttribute("data-st") || t.getAttribute("data-state");
+      view = { type: "state", abbr: abbr }; update();
+      if (!t.closest("#map") && !t.closest("#panel")) document.getElementById("map-h").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+    }
+  });
+  $("dcall").addEventListener("click", function () { dcShowAll = !dcShowAll; renderDcBars(); });
+  $("scatterseg").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-sy]");
+    if (b) { scatterY = b.getAttribute("data-sy"); renderScatter(); }
+  });
+  $("bubtoggle").addEventListener("change", function (e) {
+    showBubbles = e.target.checked;
+    $("map").classList.toggle("nobubbles", !showBubbles);
+    renderLegend();
+  });
+  document.addEventListener("keydown", function (e) {
+    var t = e.target.closest && e.target.closest(".pin");
+    if (t && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); view = { type: "hub", id: t.getAttribute("data-hub") }; update(); }
+  });
+  document.addEventListener("mousemove", function (e) {
+    var t = e.target.closest("[data-tip]");
+    if (t) return showTip(e, decodeURIComponent(t.getAttribute("data-tip")));
+    var st = e.target.closest("#map [data-st]");
+    if (st) return showTip(e, stateTip(BY_ABBR[st.getAttribute("data-st")]));
+    var pin = e.target.closest("#map .pin");
+    if (pin) { var h = hub(pin.getAttribute("data-hub")); return showTip(e, "<b>Hub " + h.n + ": " + h.name + "</b><br>Select to see details"); }
+    hideTip();
+  });
+
+  // matrix column highlight
+  $("matrix").addEventListener("mouseover", function (e) {
+    var cell = e.target.closest("td, thead th");
+    var idx = cell ? cell.cellIndex : -1;
+    var all = this.querySelectorAll("td, th");
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle("colhot", idx > 0 && all[i].cellIndex === idx);
+  });
+  $("matrix").addEventListener("mouseleave", function () {
+    var hot = this.querySelectorAll(".colhot");
+    for (var i = 0; i < hot.length; i++) hot[i].classList.remove("colhot");
+  });
+
+  // cursor spotlight on cards
+  document.addEventListener("pointermove", function (e) {
+    var c = e.target.closest && e.target.closest(".card");
+    if (!c) return;
+    var r = c.getBoundingClientRect();
+    c.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    c.style.setProperty("--my", (e.clientY - r.top) + "px");
+  }, { passive: true });
+
+  // theme toggle
+  var tb = $("themebtn");
+  function syncTheme() {
+    $("themelabel").textContent = isDark() ? "Paper" : "Ink";
+    tb.setAttribute("aria-label", isDark() ? "Switch to light theme" : "Switch to dark theme");
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", isDark() ? "#0a0e12" : "#f2eee5");
+  }
+  tb.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (err) {}
+    syncTheme(); paintMap();
+  });
+
+  // ===================== MOTION =====================
+  function countUp(el) {
+    if (el.dataset.done) return;
+    el.dataset.done = "1";
+    var end = parseFloat(el.getAttribute("data-count")), suf = el.getAttribute("data-suffix") || "";
+    if (reduceMotion) { el.textContent = fmt0(end) + suf; return; }
+    var dur = 1600, t0 = null;
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - p, 4);
+      el.textContent = fmt0(Math.round(end * e)) + suf;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    el.textContent = "0" + suf;
+    requestAnimationFrame(step);
+  }
+
+  var revealIO = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add("in");
+      var nums = e.target.querySelectorAll("[data-count]");
+      for (var i = 0; i < nums.length; i++) countUp(nums[i]);
+      revealIO.unobserve(e.target);
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }) : null;
+  function observeReveals() {
+    var els = document.querySelectorAll(".rv:not(.in)");
+    for (var i = 0; i < els.length; i++) { if (revealIO) revealIO.observe(els[i]); else els[i].classList.add("in"); }
+  }
+
+  // nav state + scroll progress
+  var nav = $("topnav"), prog = $("progress"), ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      var y = window.scrollY, max = document.documentElement.scrollHeight - window.innerHeight;
+      nav.classList.toggle("solid", y > window.innerHeight * 0.75);
+      prog.style.transform = "scaleX(" + (max > 0 ? y / max : 0).toFixed(4) + ")";
+      ticking = false;
+    });
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  // hero flow field: cool water streams warming into heat as they cross the screen
+  function flowField() {
+    var c = $("flow"); if (!c || !c.getContext) return;
+    var ctx = c.getContext("2d"), hero = document.querySelector(".hero");
+    var W = 0, H = 0, parts = [], t = Math.random() * 100, visible = true, raf = 0;
+    var mouse = { x: -9999, y: -9999 };
+    var COLS = [[108, 198, 214], [128, 196, 204], [160, 182, 176], [196, 160, 128], [222, 140, 96], [232, 129, 78]];
+    var STROKES = COLS.map(function (k) { return "rgba(" + k[0] + "," + k[1] + "," + k[2] + ",.55)"; });
+    function spawn(anywhere) {
+      return { x: anywhere ? Math.random() * W : -20 - Math.random() * 80, y: Math.random() * H, s: Math.random() * 0.8 + 0.6, life: 150 + Math.random() * 300 };
+    }
+    function resize() {
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = c.clientWidth; H = c.clientHeight;
+      c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var n = Math.round(Math.min(1500, Math.max(350, W * H / 1000)));
+      parts = []; for (var i = 0; i < n; i++) parts.push(spawn(true));
+      ctx.fillStyle = "#070a0d"; ctx.fillRect(0, 0, W, H);
+    }
+    function angle(x, y) {
+      return Math.sin(x * 0.0026 + t * 0.6) * Math.cos(y * 0.0034 - t * 0.4) * 1.15 + Math.sin((x + y) * 0.0011 + t * 0.25) * 0.55;
+    }
+    function frame() {
+      t += 0.0045;
+      ctx.fillStyle = "rgba(7,10,13,0.075)"; ctx.fillRect(0, 0, W, H);
+      var paths = COLS.map(function () { return new Path2D(); });
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i], a = angle(p.x, p.y);
+        var vx = Math.cos(a) * p.s * 1.3 + 0.85, vy = Math.sin(a) * p.s * 1.3;
+        var dx = p.x - mouse.x, dy = p.y - mouse.y, d2 = dx * dx + dy * dy;
+        if (d2 < 26000) {
+          var d = Math.sqrt(d2) || 1, f = (1 - d2 / 26000) * 3.2;
+          vx += (dx / d) * f - (dy / d) * f * 0.9; vy += (dy / d) * f + (dx / d) * f * 0.9;
+        }
+        var nx = p.x + vx, ny = p.y + vy;
+        var k = Math.max(0, Math.min(COLS.length - 1, Math.floor((nx / W) * COLS.length + Math.sin(ny * 0.01 + t) * 0.6)));
+        paths[k].moveTo(p.x, p.y); paths[k].lineTo(nx, ny);
+        p.x = nx; p.y = ny; p.life--;
+        if (p.x > W + 20 || p.y < -20 || p.y > H + 20 || p.life < 0) parts[i] = spawn(p.life < 0);
+      }
+      ctx.lineWidth = 1.1;
+      for (var j = 0; j < paths.length; j++) { ctx.strokeStyle = STROKES[j]; ctx.stroke(paths[j]); }
+    }
+    function loop() { frame(); raf = visible ? requestAnimationFrame(loop) : 0; }
+    resize();
+    if (reduceMotion) { for (var i = 0; i < 160; i++) frame(); return; }
+    var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(resize, 150); });
+    hero.addEventListener("pointermove", function (e) { var r = c.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; }, { passive: true });
+    hero.addEventListener("pointerleave", function () { mouse.x = mouse.y = -9999; });
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (es) {
+        visible = es[0].isIntersecting && !document.hidden;
+        if (visible && !raf) raf = requestAnimationFrame(loop);
+      }).observe(hero);
+    }
+    document.addEventListener("visibilitychange", function () {
+      visible = !document.hidden; if (visible && !raf) raf = requestAnimationFrame(loop);
+    });
+    raf = requestAnimationFrame(loop);
+  }
+
+  // ===================== INIT =====================
+  syncTheme(); renderHeroStats(); renderTicker(); renderHubStrip(); renderControls(); renderPanel(); renderCharts();
+  renderMatrix(); renderTakeaways(); renderSources(); renderStateTable(); renderAnalysis();
+  observeReveals(); onScroll(); flowField();
+  setTimeout(function () {
+    var hs = document.querySelectorAll("[data-hero]");
+    for (var i = 0; i < hs.length; i++) countUp(hs[i]);
+  }, reduceMotion ? 0 : 700);
+
+  $("map").innerHTML = '<div class="mapskel">Loading map</div>';
+  var done = false;
+  var timer = setTimeout(function () { if (!done) { done = true; drawTileMap(); } }, 6000);
+  fetch(ATLAS_URL).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (topo) { if (done) return; done = true; clearTimeout(timer); drawSvgMap(topo); })    .catch(function () { if (done) return; done = true; clearTimeout(timer); drawTileMap(); });
+})();
+
+</script>
+</body>
+</html>
