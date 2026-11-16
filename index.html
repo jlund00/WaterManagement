@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" class="is-loading">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -502,6 +502,252 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
 .tablewrap thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
 .tablewrap td { padding: 10px 16px; }
 
+
+
+/* ---------- cooling method slider ---------- */
+.scenes { position: relative; }
+.loop svg.scenedefs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.loop svg.scene { display: none; }
+.loop svg.scene.on { display: block; animation: scenein .5s var(--ease-out); }
+.loop .loopstat { position: static; text-align: right; margin-bottom: 6px; }
+@keyframes scenein { from { opacity: 0; transform: translateY(6px); } }
+.loop .fanbox rect, .loop .bolt rect { fill: var(--surface); stroke: var(--border-2); stroke-width: 1.5; }
+.loop .fan { fill: var(--water); transform-box: fill-box; transform-origin: center; animation: spin 1.1s linear infinite; }
+.loop .fanbox .hub { fill: var(--surface); stroke: var(--text-3); stroke-width: 1.5; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loop .bolt path { fill: var(--sun); }
+.loop .airflow, .loop .hotair { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 8 12; animation: dash 1.6s linear infinite; }
+.loop .airflow { stroke: var(--water); }
+.loop .hotair { stroke: var(--heat); }
+.loop .tower { fill: var(--surface); stroke: color-mix(in srgb, var(--water) 60%, transparent); stroke-width: 1.5; }
+.loop .fall circle { fill: var(--water); animation: fall 1.8s linear infinite; }
+@keyframes fall { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(105px); opacity: 0; } }
+.loop .puffs circle { fill: var(--water); opacity: 0; animation: puff 3.2s ease-out infinite; }
+@keyframes puff { 0% { transform: translateY(0) scale(.6); opacity: .55; } 100% { transform: translateY(-58px) scale(1.4); opacity: 0; } }
+.loop .tankfluid { fill: color-mix(in srgb, var(--water) 16%, transparent); }
+.loop .tank { fill: none; stroke: var(--border-2); stroke-width: 2.5; stroke-linecap: round; }
+.loop .blades rect { fill: var(--surface-3); stroke: var(--border-2); stroke-width: 1; }
+.loop .hotdies rect { fill: color-mix(in srgb, var(--heat) 70%, var(--surface)); }
+.loop .bubbles circle { fill: var(--water); animation: bub 2.8s ease-in infinite; }
+@keyframes bub { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(-112px); opacity: 0; } }
+.loop .fall circle, .loop .puffs circle, .loop .bubbles circle { transform-box: fill-box; transform-origin: center; }
+.mslider { margin-top: 18px; }
+.mslider input[type=range] { width: 100%; accent-color: var(--water); cursor: pointer; margin: 0; }
+.mticks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 6px; }
+.mticks button { background: none; border: 0; padding: 4px 2px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); cursor: pointer; transition: color .2s; }
+.mticks button:first-child { text-align: left; } .mticks button:last-child { text-align: right; }
+.mticks button[aria-pressed="true"] { color: var(--text); font-weight: 600; }
+.mticks button .pk { display: block; color: var(--water); font-size: 9.5px; }
+.mcap { margin: 10px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--text-2); min-height: 4.6em; }
+.mcap b { color: var(--text); }
+
+
+
+/* ---------- hub comparison ---------- */
+.hubcmp { margin-top: 16px; }
+.hubcmp-head h3 { margin: 0 0 4px; font-size: 16px; }
+.hubcmp table { min-width: 560px; margin-top: 8px; }
+.hubcmp th, .hubcmp td { padding: 12px 14px; font-size: 14px; vertical-align: middle; }
+.hubcmp tbody th { color: var(--text-2); font-weight: 500; font-size: 13px; width: 26%; }
+.hubcmp thead th { text-transform: none; letter-spacing: 0; }
+.hubcmp thead th button { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 4px 0; font: 600 14.5px var(--font-body); color: var(--text); cursor: pointer; }
+.hubcmp thead th .pinnum { background: var(--hc); color: #0a0e12; width: 22px; height: 22px; font-size: 11px; }
+.hubcmp td { font-weight: 600; font-variant-numeric: tabular-nums; transition: background-color .3s; }
+.hubcmp td.t-good { color: var(--good); } .hubcmp td.t-warn { color: var(--warn); } .hubcmp td.t-bad { color: var(--bad); } .hubcmp td.t-n { color: var(--text); font-weight: 500; }
+.hubcmp th.hc.on, .hubcmp td.on { background: color-mix(in srgb, var(--hc, var(--water)) 8%, transparent); }
+.hubcmp th.hc.on { box-shadow: inset 0 -2px 0 var(--hc); }
+
+.hubcmp .hn-s { display: none; }
+.hubcmp td small { font-weight: 500; opacity: .8; font-size: .85em; }
+@media (max-width: 640px) {
+  .hubcmp table { min-width: 0; }
+  .hubcmp th, .hubcmp td { padding: 9px 6px; font-size: 12.5px; }
+  .hubcmp tbody th { font-size: 11.5px; width: 24%; }
+  .hubcmp .hn-l { display: none; } .hubcmp .hn-s { display: inline; }
+  .hubcmp thead th button { font-size: 12.5px; gap: 5px; flex-direction: column; align-items: flex-start; }
+  .hubcmp td small { display: block; }
+}
+/* chapter 01 as a two-column stage */
+.coolstage { max-width: none; }
+.coolstage .loop { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 8px 56px; align-items: center; }
+.coolstage .scenes { grid-row: 1 / 3; max-width: none; width: 100%; }
+.coolstage .loopstat { text-align: left; align-self: end; margin: 0; }
+.coolstage .mslider { align-self: start; margin-top: 10px; }
+@media (max-width: 900px) { .coolstage .loop { grid-template-columns: minmax(0, 1fr); } .coolstage .scenes { grid-row: auto; } .coolstage .loopstat { text-align: right; } }
+/* scroll cue clear of the hero stats */
+.scrollcue { left: auto; right: clamp(18px, 4vw, 40px); transform: none; bottom: 30px; }
+/* verdict band centered */
+.verdict-in.solo { margin-left: auto; margin-right: auto; text-align: center; justify-items: center; }
+.verdict-in.solo .kick { justify-content: center; }
+.verdict-in.solo .sub { margin-left: auto; margin-right: auto; }
+.verdict-in.solo h2 { margin-left: auto; margin-right: auto; }
+
+/* ---------- AI strip ---------- */
+.aistrip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 40px; }
+.ai-col { position: relative; border-radius: var(--radius); padding: 24px 26px; border: 1px solid var(--border); overflow: hidden; }
+.ai-can { background: linear-gradient(160deg, color-mix(in srgb, var(--water) 12%, var(--surface)), var(--surface) 60%); }
+.ai-cant { background: linear-gradient(160deg, color-mix(in srgb, var(--heat) 12%, var(--surface)), var(--surface) 60%); }
+.ai-cant .kick { color: var(--heat); } .ai-can .kick { color: var(--water); }
+.ai-col ul { list-style: none; margin: 0; padding: 0; }
+.ai-col li { position: relative; padding: 10px 0 10px 26px; border-top: 1px solid var(--border); color: var(--text-2); font-size: 15px; line-height: 1.55; }
+.ai-col li:first-child { border-top: 0; }
+.ai-can li::before { content: "+"; position: absolute; left: 2px; top: 9px; color: var(--water); font-family: var(--font-mono); font-weight: 600; }
+.ai-cant li::before { content: "−"; position: absolute; left: 2px; top: 9px; color: var(--heat); font-family: var(--font-mono); font-weight: 600; }
+@media (max-width: 900px) { .aistrip { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- immersive layer ---------- */
+.loader { position: fixed; inset: 0; z-index: 200; background: #070a0d; color: #ece7dc; display: grid; place-items: center; transition: clip-path 1s var(--ease-out), opacity 1s; clip-path: inset(0 0 0 0); }
+.loader.done { clip-path: inset(0 0 100% 0); }
+.loader-in { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.loader-in svg { width: 46px; height: 46px; color: #6cc6d6; animation: glow 2s ease-in-out infinite; }
+.loader-t { font-family: var(--font-display); font-size: 30px; letter-spacing: -.01em; }
+.loader-t em { color: #e8814e; }
+.loader-n { font-family: var(--font-mono); font-size: 12px; letter-spacing: .3em; color: #6d787c; }
+html.is-loading .intro { animation-play-state: paused; }
+html.is-loading body { overflow: hidden; }
+/* frost reveal: elements come into focus as they enter */
+.rv { filter: blur(10px); transition: opacity 1s var(--ease-out), transform 1s var(--ease-out), filter 1.1s var(--ease-out); }
+.rv.in { filter: none; }
+/* chromatic split on chapter numbers */
+.sechead.in .secnum { animation: chroma 1.4s var(--ease-out) both; }
+@keyframes chroma { 0% { text-shadow: -6px 0 rgba(232,129,78,.7), 6px 0 rgba(108,198,214,.7); } 100% { text-shadow: 0 0 transparent, 0 0 transparent; } }
+.secnum { transition: color .4s; }
+.sechead:hover .secnum { text-shadow: -2px 0 rgba(232,129,78,.6), 2px 0 rgba(108,198,214,.6); }
+/* custom cursor */
+.cursor, .cursor-dot { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 150; }
+.cursor { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1px solid rgba(108,198,214,.7); border-radius: 50%; transition: width .25s var(--ease), height .25s var(--ease), margin .25s var(--ease), background-color .25s, border-color .25s; }
+.cursor.hot { width: 56px; height: 56px; margin: -28px 0 0 -28px; background: rgba(108,198,214,.12); border-color: rgba(232,129,78,.8); }
+.cursor-dot { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: var(--heat); }
+/* chapter 01: cooling stage */
+.coolstage { max-width: 760px; margin: 0 auto; }
+.coolstage .loop { max-width: none; }
+.coolstage .scenes { max-width: 560px; margin: 0 auto; }
+.mfit { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.mfl { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); flex-basis: 100%; }
+.mfc { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); }
+.mfc .chip { margin: 0 0 0 2px; }
+/* verdict without the animation */
+.verdict-in.solo { grid-template-columns: minmax(0, 1fr); max-width: 980px; }
+/* calculator: compact cards and breakdown */
+.kpi6.k3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.methbox .fullin { padding: 4px 22px 22px; display: flex; flex-direction: column; gap: 18px; }
+.methbox .fullin .methgrid { padding: 0; }
+.tablebox h3 { font-size: 16px; margin: 0 0 4px; }
+/* appendix */
+.apx { padding: 0; }
+.apx summary { display: flex; width: 100%; justify-content: space-between; align-items: center; border: 0; border-radius: var(--radius); padding: 22px 24px; }
+.apx summary b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(28px, 3vw, 40px); color: var(--text); letter-spacing: -.01em; }
+.apx summary small { display: block; font-size: 13px; color: var(--text-3); margin-top: 4px; }
+.apx-in { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 22px; }
+@media (max-width: 900px) { .kpi6.k3 { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .rv { filter: none !important; } .loader { display: none; } }
+
+/* ---------- calculator ---------- */
+.calcgrid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.4fr); gap: 16px; align-items: start; }
+.calcin h3 { margin: 0 0 14px; font-size: 17px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; min-width: 0; }
+.flab { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.frow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.field input { font: 500 15px var(--font-mono); color: var(--text); background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 10px; padding: 9px 11px; width: 100%; font-variant-numeric: tabular-nums; }
+.field input:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+.fnote { font-size: 12.5px; color: var(--text-3); margin: 2px 0 0; line-height: 1.5; }
+.calcout { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.kpi b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(26px, 2.6vw, 34px); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.kpi small { display: block; font-size: 12px; color: var(--text-2); line-height: 1.35; margin-top: 4px; }
+.kpi.good b { color: var(--good); } .kpi.bad b { color: var(--bad); }
+.calcmsg { margin: 12px 0 0; font-size: 14.5px; color: var(--text-2); line-height: 1.55; }
+.calcmsg b { color: var(--text); }
+.calctable { min-width: 640px; }
+.calctable th, .calctable td { padding: 11px 12px; font-size: 13.5px; }
+.calctable td.num { text-align: right; font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.calctable tr.isbase td, .calctable tr.isbase th { background: color-mix(in srgb, var(--heat) 7%, transparent); }
+.calctable tr.isalt td, .calctable tr.isalt th { background: color-mix(in srgb, var(--water) 9%, transparent); }
+.calctable tbody th { font-weight: 600; white-space: nowrap; }
+.calctable tbody th small { display: block; font-weight: 400; color: var(--text-3); font-size: 11.5px; margin-top: 2px; }
+.calctable .flag { display: block; font-family: var(--font-body); font-size: 11.5px; color: var(--bad); margin-top: 3px; white-space: normal; text-align: left; }
+.cbars h3 { font-size: 15px; margin: 0 0 4px; }
+.cbars .unit { font-size: 12.5px; color: var(--text-2); margin: 0 0 12px; }
+.cbars + .cbars { margin-top: 18px; }
+.cbrow { display: grid; grid-template-columns: 120px minmax(0, 1fr) 84px; gap: 10px; align-items: center; margin-bottom: 8px; font-size: 13px; }
+.cbrow .lab { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cbrow .trk { position: relative; height: 16px; background: var(--surface-2); border-radius: 5px; display: flex; overflow: hidden; }
+.cbrow .trk i { display: block; height: 100%; transition: width .6s var(--ease); }
+.cbrow .v { font-family: var(--font-mono); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+
+.fsub { margin: -8px 0 16px; font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.livetag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--good); }
+.livetag i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); animation: livepulse 2s infinite; }
+.field select { font: 500 14px var(--font-body); color: var(--text); background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 10px; padding: 9px 11px; width: 100%; }
+.field select:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+.fhint { font-size: 12px; color: var(--text-3); line-height: 1.4; }
+.falert { font-size: 12.5px; line-height: 1.45; color: var(--warn); }
+.falert:empty { display: none; }
+.inunit { display: flex; align-items: center; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 10px; overflow: hidden; }
+.inunit input { border: 0 !important; background: transparent !important; border-radius: 0 !important; min-width: 0; }
+.inunit span { padding: 0 11px; font-family: var(--font-mono); font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.inunit:focus-within { outline: 2px solid var(--focus); outline-offset: 1px; }
+.inunit input:focus { outline: none; }
+.frow3 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border: 1px solid var(--border-2); background: transparent; color: var(--text-2); border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: background-color .2s, color .2s; }
+.chips button:hover { color: var(--text); }
+.chips button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.kpi.score b { color: var(--water); }
+.calctable tr.isrec td, .calctable tr.isrec th { background: color-mix(in srgb, var(--water) 9%, transparent); }
+.calctable .fit { font-family: var(--font-mono); font-weight: 600; }
+@media (max-width: 1240px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.flab.sl { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.flab.sl output { font-family: var(--font-display); font-size: 22px; letter-spacing: -.01em; text-transform: none; color: var(--text); }
+.rng { width: 100%; accent-color: var(--water); cursor: pointer; margin: 2px 0 4px; }
+.recbar { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; padding: 16px 20px; }
+.recbar .rk { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.recbar h3 { margin: 2px 0 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(26px, 2.6vw, 34px); line-height: 1.05; }
+.recbar .score { text-align: right; }
+.recbar .score b { font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 3vw, 40px); color: var(--water); line-height: 1; }
+.recbar .score b small { font-size: .45em; color: var(--text-3); }
+.recbar p { flex-basis: 100%; margin: 0; font-size: 14px; color: var(--text-2); line-height: 1.55; }
+.recbar p b { color: var(--text); }
+.kpi6 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.k6 { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.k6 .kl { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.k6 .ks { font-size: 12px; color: var(--text-2); }
+.k6 .kval { font-family: var(--font-display); font-size: clamp(26px, 2.3vw, 34px); line-height: 1.05; margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.k6 .kval small { font-family: var(--font-body); font-size: 13px; color: var(--text-3); margin-left: 4px; }
+.k6 .kc { font-size: 12.5px; color: var(--text-3); }
+.k6 .kd { font-size: 12.5px; font-weight: 600; margin-top: 2px; }
+.k6 .kd.good { color: var(--good); } .k6 .kd.bad { color: var(--bad); } .k6 .kd.flat { color: var(--text-3); }
+.mxhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.mxhead h3, .tth { font-size: 16px; margin: 0 0 4px; }
+.mxchart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.mxchart .ax { stroke: var(--border); } .mxchart .tk { fill: var(--text-3); font-family: var(--font-mono); font-size: 11px; }
+.mxchart .xl { fill: var(--text-2); font-size: 12.5px; } .mxchart .xl.rec { fill: var(--text); font-weight: 600; }
+.mxchart .vl { fill: var(--text); font-family: var(--font-mono); font-size: 11px; }
+.mxchart rect { transition: height .5s var(--ease), y .5s var(--ease); }
+.mxleg { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-2); margin-top: 6px; }
+.mxleg i { display: inline-block; width: 12px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.badge { display: inline-block; font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; margin: 4px 4px 0 0; font-weight: 500; }
+.badge.cur { background: color-mix(in srgb, var(--heat) 16%, transparent); color: var(--heat); }
+.badge.opt { background: color-mix(in srgb, var(--water) 18%, transparent); color: var(--water); }
+.badge.over { background: var(--bad-bg); color: var(--bad); }
+.badge.risk { background: var(--warn-bg); color: var(--warn); }
+.methbox { margin-top: 16px; padding: 0; }
+.methbox summary { display: flex; width: 100%; justify-content: space-between; align-items: center; border: 0; border-radius: var(--radius); padding: 18px 22px; }
+.methbox summary b { display: block; font-size: 16px; color: var(--text); font-weight: 600; }
+.methbox summary small { display: block; font-size: 12.5px; color: var(--text-3); font-weight: 400; margin-top: 2px; }
+.methgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; padding: 4px 22px 22px; }
+.methgrid h4 { margin: 0 0 8px; font-size: 14.5px; }
+.methgrid p { margin: 0 0 10px; font-size: 13.5px; color: var(--text-2); line-height: 1.6; }
+.methgrid p b { color: var(--text); }
+.eq { font-family: var(--font-mono); font-size: 12px; line-height: 1.7; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 0; overflow-x: auto; color: var(--text); }
+@media (max-width: 900px) { .kpi6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .methgrid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) { .kpi6 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1080px) { .calcgrid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } .frow3 { grid-template-columns: minmax(0, 1fr); } .cbrow { grid-template-columns: 92px minmax(0, 1fr) 70px; } }
+
 /* ---------- verdict band ---------- */
 #recommend { padding-top: clamp(80px, 11vw, 140px); }
 .verdict-band {
@@ -646,6 +892,13 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-in">
+    <svg viewBox="0 0 32 32"><path d="M16 4c4.4 6 7.6 10.2 7.6 14.4a7.6 7.6 0 0 1-15.2 0C8.4 14.2 11.6 10 16 4z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M16 13c2.2 3 3.6 4.9 3.6 6.8a3.6 3.6 0 0 1-7.2 0c0-1.9 1.4-3.8 3.6-6.8z" fill="#e8814e"/></svg>
+    <span class="loader-t">Cooling <em>by</em> Location</span>
+    <span class="loader-n" id="loader-n">000</span>
+  </div>
+</div>
 <a class="skip" href="#overview">Skip to findings</a>
 
 <nav class="topnav" id="topnav" aria-label="Sections">
@@ -655,14 +908,11 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
       <span>Cooling <em>by</em> Location</span>
     </a>
     <div class="navlinks" id="navlinks">
-      <a href="#overview">Findings</a>
+      <a href="#cool">Cooling</a>
       <a href="#map-sec">Map</a>
-      <a href="#analysis">Analysis</a>
-      <a href="#hubs">Hubs</a>
-      <a href="#cooling">Cooling fit</a>
+      <a href="#calc">Calculator</a>
       <a href="#recommend">Verdict</a>
-      <a href="#methods">Methods</a>
-      <a href="#sources-sec">Sources</a>
+      <a href="#appendix">Sources</a>
     </div>
     <button class="themebtn" id="themebtn" type="button" aria-label="Switch color theme">
       <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
@@ -693,7 +943,7 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
     </div>
     <div class="herostats intro" id="herostats" style="--d:5"></div>
   </div>
-  <a class="scrollcue" href="#overview" aria-label="Scroll to findings"><span>Scroll</span><i></i></a>
+  <a class="scrollcue" href="#cool" aria-label="Scroll to the first chapter"><span>Scroll</span><i></i></a>
 </header>
 
 <div class="ticker" aria-hidden="true">
@@ -701,151 +951,51 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
 </div>
 
 <main>
-  <section id="overview" class="wrap" aria-labelledby="ov-h">
-    <header class="sechead rv">
-      <span class="secnum">00</span>
-      <div>
-        <p class="kick">Summary</p>
-        <h2 id="ov-h">Key findings</h2>
-        <p class="sub">What the data shows across all 50 states, DC and our three case-study hubs.</p>
-      </div>
-    </header>
-    <ol class="findings">
-      <li class="rv f-big" style="--d:0">
-        <span class="fig"><span data-count="27" data-suffix="%">27%</span></span>
-        <b>Data centers are highly concentrated.</b>
-        <p>Virginia and Texas hold 984 of the 3,712 data centers counted, about 27% of the U.S. total.<a href="#src-8" aria-label="source 8"><sup>8</sup></a></p>
-      </li>
-      <li class="rv" style="--d:1">
-        <span class="fig fig-heat"><span data-count="1307">1,307</span><small>MW</small></span>
-        <b>The fastest growth is in the driest hub.</b>
-        <p>Phoenix has 1,307 MW under construction, more than the 904 MW it runs today, with just 7.2 inches of rain a year, in a state rated High for water stress.<sup><a href="#src-1" aria-label="source 1">1</a>,<a href="#src-5" aria-label="source 5">5</a>,<a href="#src-15" aria-label="source 15">15</a></sup></p>
-      </li>
-      <li class="rv" style="--d:2">
-        <span class="fig fig-sm">TX <i>&gt;</i> VA</span>
-        <b>The grid matters as much as water.</b>
-        <p>Weighted by grid carbon, Texas outranks Virginia despite having fewer data centers.<a href="#src-9" aria-label="source 9"><sup>9</sup></a></p>
-      </li>
-      <li class="rv f-wide" style="--d:3">
-        <span class="fig fig-water"><span data-count="3">3</span><small>of 3 hubs</small></span>
-        <b>Recommendation: direct-to-chip liquid cooling.</b>
-        <p>It is the only method rated a good fit in all three hubs, but each location needs different support, from reclaimed water to clean power.</p>
-      </li>
-    </ol>
-  </section>
-
-  <section id="map-sec" class="wrap" aria-labelledby="map-h">
+  <section id="cool" class="wrap" aria-labelledby="cool-h">
     <header class="sechead rv">
       <span class="secnum">01</span>
       <div>
-        <p class="kick">Explore</p>
-        <h2 id="map-h">Where data centers are, and <em>what surrounds them</em></h2>
-        <p class="sub">Switch the map between four measures. Hover a state for its numbers, or select a numbered pin to open one of our three hubs.</p>
+        <p class="kick">The trade-off</p>
+        <h2 id="cool-h">Four ways to cool AI. <em>Each one costs something.</em></h2>
+        <p class="sub">Slide through the four methods. Some save water but burn more electricity; others save electricity but evaporate local water.</p>
       </div>
     </header>
-    <div class="controls rv">
-      <div class="seg" id="metricseg" role="group" aria-label="Map measure"></div>
-      <div class="hubpicks" id="hubpicks" role="group" aria-label="Choose a hub"></div>
-    </div>
-    <div class="mapgrid rv">
-      <div class="card mapcard">
-        <div class="maphead">
-          <div><h3 id="maptitle"></h3><small id="mapsource"></small></div>
-          <label class="toggle"><input type="checkbox" id="bubtoggle" checked><span class="sw" aria-hidden="true"></span> Data center bubbles</label>
-        </div>
-        <div id="map" role="img" aria-label="Map of the United States"></div>
-        <div class="legend" id="legend"></div>
-        <p class="mapnote" id="mapnote"></p>
-      </div>
-      <div class="card panel" id="panel" aria-live="polite"></div>
-    </div>
-    <details class="rv">
-      <summary><span>Show all 50 states and DC as a table</span><i aria-hidden="true"></i></summary>
-      <div class="statetable"><div class="tablewrap" id="statetable"></div></div>
-    </details>
-  </section>
-
-  <section id="analysis" class="wrap" aria-labelledby="an-h">
-    <header class="sechead rv">
-      <span class="secnum">02</span>
-      <div>
-        <p class="kick">Analysis</p>
-        <h2 id="an-h">State-by-state analysis</h2>
-        <p class="sub">Where data centers, water stress and carbon-heavy grids overlap. Adapted from an independent water-stress analysis<a href="#src-14" aria-label="source 14"><sup>14</sup></a> and extended with grid carbon.</p>
-      </div>
-    </header>
-    <div class="angrid">
-      <div class="card rv an-a" style="--d:0">
-        <div class="cardhead"><div><h3>Data centers by state</h3><p class="unit">Facilities, October 2026. Two states hold over a quarter of the total.</p></div>
-          <button type="button" class="smallbtn" id="dcall">Show all</button></div>
-        <div id="an-dc"></div>
-      </div>
-      <div class="card rv an-b" style="--d:1">
-        <div class="cardhead"><div><h3>Data centers vs. conditions</h3><p class="unit">Each mark is a state. Shape and color show region.</p></div>
-          <div class="seg seg-sm" id="scatterseg" role="group" aria-label="Scatter y-axis">
-            <button type="button" data-sy="co2" aria-pressed="true">Grid carbon</button>
-            <button type="button" data-sy="stress" aria-pressed="false">Water stress</button>
-            <button type="button" data-sy="rain" aria-pressed="false">Rainfall</button>
-          </div></div>
-        <div id="an-scatter"></div>
-        <div class="chartlegend" id="scatterlegend"></div>
-      </div>
-      <div class="card rv an-c" style="--d:0">
-        <h3>Data centers in high water-stress states</h3>
-        <p class="unit">States with an average WRI water stress score of 3 or more out of 5, where evaporative cooling strains supply most.</p>
-        <div id="an-dry"></div>
-      </div>
-      <div class="card rv an-d" style="--d:1">
-        <h3>Carbon-weighted data centers</h3>
-        <p class="unit">Data centers × state grid carbon ÷ U.S. average. Higher means growth there adds more emissions.</p>
-        <div id="an-carbon"></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="hubs" class="wrap" aria-labelledby="cmp-h">
-    <header class="sechead rv">
-      <span class="secnum">03</span>
-      <div>
-        <p class="kick">Case study</p>
-        <h2 id="cmp-h">Three hubs, <em>three climates</em></h2>
-        <p class="sub">A water-rich hub, a middle-ground hub and a desert hub. Phoenix is building more than it runs today, gets less than a fifth of Northern Virginia's rain, and sits on a grid nearly as carbon-heavy as Texas.</p>
-      </div>
-    </header>
-    <div class="hubstrip rv" id="hubstrip"></div>
-    <div class="charts">
-      <div class="card chart rv" style="--d:0" id="chart-cap"></div>
-      <div class="card chart rv" style="--d:1" id="chart-rain"></div>
-      <div class="card chart rv" style="--d:2" id="chart-grid"></div>
-    </div>
-  </section>
-
-  <section id="cooling" class="wrap" aria-labelledby="fit-h">
-    <header class="sechead rv">
-      <span class="secnum">04</span>
-      <div>
-        <p class="kick">Assessment</p>
-        <h2 id="fit-h">Cooling fit by location</h2>
-        <p class="sub">Our team's assessment of each method in each hub. Direct-to-chip liquid cooling is the only method rated a good fit in all three.</p>
-      </div>
-    </header>
-    <div class="card scroll matrix rv" id="matrix"></div>
-  </section>
-
-  <section id="recommend" aria-labelledby="take-h">
-    <div class="verdict-band">
-      <div class="wrap verdict-in">
-        <div class="verdict-copy rv">
-          <p class="kick">05 · Recommendation</p>
-          <h2 id="take-h">Direct-to-chip <em>liquid cooling</em>, by default.</h2>
-          <p class="sub">A sealed loop carries heat straight off the chip and reuses the same water, losing only 0–5% of it. What it needs alongside it depends on the location.</p>
-        </div>
-        <div class="loop rv" style="--d:1" aria-hidden="true">
-          <svg viewBox="0 0 360 300">
-            <defs>
+    <div class="coolstage rv">
+        <div class="loop rv" style="--d:1">
+          <div class="scenes" aria-hidden="true">
+            <svg class="scenedefs" width="0" height="0"><defs>
               <linearGradient id="lg" x1="0" x2="1" y1="0" y2="0"><stop offset="0" style="stop-color:var(--water)"/><stop offset="1" style="stop-color:var(--heat)"/></linearGradient>
               <radialGradient id="chipglow"><stop offset="0" style="stop-color:var(--heat);stop-opacity:.55"/><stop offset="1" style="stop-color:var(--heat);stop-opacity:0"/></radialGradient>
-            </defs>
+            </defs></svg>
+<svg class="scene" data-scene="air" viewBox="0 0 360 300">
+  <circle cx="230" cy="150" r="88" fill="url(#chipglow)" class="glow"/>
+  <g class="fanbox" transform="translate(64 150)"><rect x="-34" y="-34" width="68" height="68" rx="10"/><g class="fan"><path d="M0 0 C6 -14 18 -22 26 -14 C14 -10 6 -4 0 0Z M0 0 C14 6 22 18 14 26 C10 14 4 6 0 0Z M0 0 C-6 14 -18 22 -26 14 C-14 10 -6 4 0 0Z M0 0 C-14 -6 -22 -18 -14 -26 C-10 -14 -4 -6 0 0Z"/></g><circle r="4" class="hub"/></g>
+  <path class="airflow" d="M104 118 C130 112 150 124 186 120"/><path class="airflow" d="M104 140 C130 134 150 146 186 142" style="animation-delay:-.4s"/><path class="airflow" d="M104 162 C130 156 150 168 186 164" style="animation-delay:-.8s"/><path class="airflow" d="M104 184 C130 178 150 190 186 186" style="animation-delay:-1.2s"/>
+  <path class="hotair" d="M274 120 C300 110 312 92 334 74"/><path class="hotair" d="M274 150 C302 146 318 124 344 110" style="animation-delay:-.5s"/><path class="hotair" d="M274 180 C304 178 322 160 348 150" style="animation-delay:-1s"/>
+  <g class="chip" transform="translate(230 150)"><rect x="-34" y="-34" width="68" height="68" rx="8"/><rect x="-20" y="-20" width="40" height="40" rx="4" class="die"/><path d="M-26 -42v8M-13 -42v8M0 -42v8M13 -42v8M26 -42v8M-26 34v8M-13 34v8M0 34v8M13 34v8M26 34v8M-42 -26h8M-42 -13h8M-42 0h8M-42 13h8M-42 26h8M34 -26h8M34 -13h8M34 0h8M34 13h8M34 26h8"/></g>
+  <g class="bolt" transform="translate(64 238)"><rect x="-34" y="-16" width="68" height="32" rx="8"/><path d="M3 -10 L-6 2 H1 L-3 11 L7 -2 H0 Z"/></g>
+  <text x="64" y="102" text-anchor="middle">Fans</text>
+  <text x="64" y="270" text-anchor="middle">Chillers</text>
+  <text x="230" y="262" text-anchor="middle">AI chip</text>
+  <text x="145" y="98" text-anchor="middle" class="t-water">cool air →</text>
+  <text x="318" y="62" text-anchor="middle" class="t-heat">hot air out</text>
+</svg>
+<svg class="scene" data-scene="evap" viewBox="0 0 360 300">
+  <circle cx="250" cy="150" r="88" fill="url(#chipglow)" class="glow"/>
+  <path class="pipe" d="M216 130 H150 V96 H118"/><path class="flowline" d="M216 130 H150 V96 H118"/>
+  <path class="pipe" d="M112 212 H216"/><path class="flowline" d="M112 212 H216"/>
+  <path class="tower" d="M44 232 L64 96 L116 96 L136 232 Z"/>
+  <g class="fall"><circle cx="72" cy="112" r="2.5"/><circle cx="90" cy="108" r="2.5" style="animation-delay:-.6s"/><circle cx="106" cy="112" r="2.5" style="animation-delay:-1.2s"/><circle cx="82" cy="110" r="2.5" style="animation-delay:-1.6s"/><circle cx="98" cy="114" r="2.5" style="animation-delay:-.3s"/></g>
+  <g class="puffs"><circle cx="76" cy="88" r="9"/><circle cx="96" cy="84" r="11" style="animation-delay:-1s"/><circle cx="110" cy="90" r="8" style="animation-delay:-2s"/><circle cx="86" cy="90" r="7" style="animation-delay:-2.6s"/></g>
+  <g class="chip" transform="translate(250 150)"><rect x="-34" y="-34" width="68" height="68" rx="8"/><rect x="-20" y="-20" width="40" height="40" rx="4" class="die"/><path d="M-26 -42v8M-13 -42v8M0 -42v8M13 -42v8M26 -42v8M-26 34v8M-13 34v8M0 34v8M13 34v8M26 34v8M-42 -26h8M-42 -13h8M-42 0h8M-42 13h8M-42 26h8M34 -26h8M34 -13h8M34 0h8M34 13h8M34 26h8"/></g>
+  <text x="90" y="256" text-anchor="middle">Cooling tower</text>
+  <text x="90" y="30" text-anchor="middle" class="t-water">water evaporates ↑</text>
+  <text x="250" y="262" text-anchor="middle">AI chip</text>
+  <text x="182" y="86" text-anchor="middle" class="t-heat">hot water →</text>
+  <text x="180" y="234" text-anchor="middle" class="t-water">cooled water →</text>
+</svg>
+          <svg class="scene" data-scene="dtc" viewBox="0 0 360 300">
+            
             <circle cx="250" cy="150" r="88" fill="url(#chipglow)" class="glow"/>
             <path id="looppath" class="pipe" d="M70 90 H250 a60 60 0 0 1 0 120 H70 a60 60 0 0 1 0 -120 Z"/>
             <path class="flowline" d="M70 90 H250 a60 60 0 0 1 0 120 H70 a60 60 0 0 1 0 -120 Z"/>
@@ -869,12 +1019,186 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
             <text x="160" y="80" text-anchor="middle" class="t-heat">heat out →</text>
             <text x="160" y="228" text-anchor="middle" class="t-water">← cooled water</text>
           </svg>
-          <div class="loopstat"><b data-count="95" data-suffix="%+">95%+</b><span>of loop water reused</span></div>
+<svg class="scene" data-scene="imm" viewBox="0 0 360 300">
+  <rect class="tankfluid" x="62" y="108" width="196" height="132" rx="4"/>
+  <path class="tank" d="M56 84 V244 a6 6 0 0 0 6 6 H258 a6 6 0 0 0 6 -6 V84"/>
+  <g class="blades"><rect x="84" y="122" width="22" height="104" rx="3"/><rect x="124" y="122" width="22" height="104" rx="3"/><rect x="164" y="122" width="22" height="104" rx="3"/><rect x="204" y="122" width="22" height="104" rx="3"/></g>
+  <g class="hotdies"><rect x="89" y="158" width="12" height="18" rx="2"/><rect x="129" y="158" width="12" height="18" rx="2"/><rect x="169" y="158" width="12" height="18" rx="2"/><rect x="209" y="158" width="12" height="18" rx="2"/></g>
+  <g class="bubbles"><circle cx="112" cy="226" r="3"/><circle cx="152" cy="226" r="2.5" style="animation-delay:-.8s"/><circle cx="192" cy="226" r="3" style="animation-delay:-1.6s"/><circle cx="232" cy="226" r="2.5" style="animation-delay:-.4s"/><circle cx="118" cy="226" r="2" style="animation-delay:-2s"/><circle cx="198" cy="226" r="2" style="animation-delay:-1.2s"/><circle cx="158" cy="226" r="2" style="animation-delay:-2.4s"/></g>
+  <path class="pipe" d="M264 120 H300 V176 H264"/><path class="flowline" d="M264 120 H300 V176 H264"/>
+  <g class="rad" transform="translate(316 148)"><rect x="-14" y="-30" width="28" height="60" rx="5"/><path d="M-7 -18h14M-7 -6h14M-7 6h14M-7 18h14"/></g>
+  <text x="160" y="72" text-anchor="middle">Servers in special fluid</text>
+  <text x="160" y="272" text-anchor="middle" class="t-water">fluid absorbs heat</text>
+  <text x="316" y="200" text-anchor="middle" class="t-heat">heat out</text>
+</svg>
+          </div>
+          <div class="loopstat"><b id="loopstat-b">95%+</b><span id="loopstat-s">of loop water reused</span></div>
+          <div class="mslider">
+            <input type="range" id="mslide" min="0" max="3" step="1" value="2" aria-label="Cooling method" aria-valuetext="Direct-to-chip">
+            <div class="mticks" id="mticks"></div>
+            <p class="mcap" id="mcap"></p>
+            <div class="mfit" id="mfit"></div>
+          </div>
+        </div>
+    </div>
+  </section>
+
+  <section id="map-sec" class="wrap" aria-labelledby="map-h">
+    <header class="sechead rv">
+      <span class="secnum">02</span>
+      <div>
+        <p class="kick">Where</p>
+        <h2 id="map-h">Where data centers are, and <em>what surrounds them</em></h2>
+        <p class="sub">Switch the map between four measures. Hover a state for its numbers, or select a numbered pin to open one of our three hubs.</p>
+      </div>
+    </header>
+    <div class="controls rv">
+      <div class="seg" id="metricseg" role="group" aria-label="Map measure"></div>
+      <div class="hubpicks" id="hubpicks" role="group" aria-label="Choose a hub"></div>
+    </div>
+    <div class="mapgrid rv">
+      <div class="card mapcard">
+        <div class="maphead">
+          <div><h3 id="maptitle"></h3><small id="mapsource"></small></div>
+          <label class="toggle"><input type="checkbox" id="bubtoggle" checked><span class="sw" aria-hidden="true"></span> Data center bubbles</label>
+        </div>
+        <div id="map" role="img" aria-label="Map of the United States"></div>
+        <div class="legend" id="legend"></div>
+        <p class="mapnote" id="mapnote"></p>
+      </div>
+      <div class="card panel" id="panel" aria-live="polite"></div>
+    </div>
+    <div class="card hubcmp rv">
+      <div class="hubcmp-head"><h3>Three hubs at a glance</h3><p class="unit">Green is the best of the three, red the worst. Select a hub to open it on the map.</p></div>
+      <div class="scroll"><table id="hubcmp"></table></div>
+      <p class="mapnote">Rainfall: NWS 1991–2020 normals. Water stress: WRI Aqueduct 4.0, state average. Grid carbon: EPA eGRID 2023, regional grid.</p>
+    </div>
+  </section>
+
+  <section id="calc" class="wrap" aria-labelledby="calc-h">
+    <header class="sechead rv">
+      <span class="secnum">03</span>
+      <div>
+        <p class="kick">Test a site</p>
+        <h2 id="calc-h">Test a site: <em>water, energy and cost</em></h2>
+        <p class="sub">Describe a site and its current cooling method. The calculator compares all four methods on water use (on site and at the power plants), energy and cost, and recommends the best fit.</p>
+      </div>
+    </header>
+    <div class="calcgrid rv">
+      <div class="card calcin">
+        <h3>Facility &amp; regional inputs</h3>
+        <p class="fsub">Site hardware, climate, watershed and grid water intensity <span class="livetag"><i></i>Live</span></p>
+        <label class="field"><span class="flab">1. Current / baseline cooling method</span>
+          <select id="c-base">
+            <option value="air">Air Cooling (CRAC / CRAH Mechanical Chiller)</option>
+            <option value="evap" selected>Evaporative Cooling (Cooling Towers / Adiabatic)</option>
+            <option value="dtc">Direct-to-Chip Liquid (Closed-Loop Cold Plate)</option>
+            <option value="imm">Immersion Cooling (Single/Two-Phase Dielectric Bath)</option>
+          </select>
+          <span class="fhint">Reference system for calculating annual water, energy and cost differences.</span></label>
+        <div class="field"><span class="flab sl">2. Total facility IT load <output id="c-mw-v">20 MW</output></span>
+          <input type="range" class="rng" id="c-mw" min="1" max="200" step="1" value="20" aria-label="IT load in megawatts">
+          <div class="chips" data-for="c-mw"><button type="button" data-v="1">1 MW edge</button><button type="button" data-v="20">20 MW AI cluster</button><button type="button" data-v="100">100 MW hyperscale</button></div></div>
+        <div class="field"><span class="flab sl">3. Average rack power density <output id="c-rack-v">100 kW</output></span>
+          <input type="range" class="rng" id="c-rack" min="5" max="250" step="5" value="100" aria-label="Rack power density in kilowatts">
+          <div class="chips" data-for="c-rack"><button type="button" data-v="10">10 kW legacy CPU</button><button type="button" data-v="45">45 kW air limit</button><button type="button" data-v="200">200 kW next-gen GPU</button></div>
+          <span class="falert" id="c-rackalert"></span></div>
+        <label class="field"><span class="flab">4. Climate / wet-bulb profile</span>
+          <select id="c-climate">
+            <option value="dry" selected>Hot &amp; Dry / Arid (AZ, NV)</option>
+            <option value="humid">Hot &amp; Humid (TX, VA Summer)</option>
+            <option value="mild">Temperate / Mild (OR, UK)</option>
+            <option value="cold">Cold / Cool (Nordics, QC)</option>
+          </select></label>
+        <label class="field"><span class="flab">5. Local watershed stress</span>
+          <select id="c-stress">
+            <option value="low">Low Stress (&lt;20% withdrawal)</option>
+            <option value="med">Medium-High Stress (40–80%)</option>
+            <option value="ext" selected>Extreme Stress / Drought-Prone</option>
+          </select></label>
+        <label class="field"><span class="flab">6. Grid energy water intensity · Scope 2</span>
+          <select id="c-grid">
+            <option value="0.5">Low-water grid · solar / wind / dry-cooled gas (~0.5 L/kWh)</option>
+            <option value="1.8" selected>US national average grid (~1.8 L/kWh · NREL)</option>
+            <option value="4.5">Water-intensive thermoelectric / hydro (~4.5 L/kWh)</option>
+            <option value="custom">Custom site grid EWIF override</option>
+          </select></label>
+        <div class="field"><span class="flab">Active grid EWIF · liters evaporated per kWh</span>
+          <div class="inunit"><input type="number" id="c-ewif" min="0" max="20" step="0.1" value="1.8"><span>L/kWh</span></div></div>
+        <div class="field"><span class="flab">7. Site tariffs &amp; capital horizon</span>
+          <div class="frow3">
+            <label class="inunit"><input type="number" id="c-elec" min="0" max="1" step="0.005" value="0.085" aria-label="Electricity price"><span>$/kWh electricity</span></label>
+            <label class="inunit"><input type="number" id="c-water" min="0" max="100" step="0.5" value="6.5" aria-label="Water price"><span>$/kgal water</span></label>
+            <label class="inunit"><input type="number" id="c-horizon" min="1" max="30" step="1" value="5" aria-label="Horizon"><span>year horizon</span></label>
+          </div>
+          </div>
+      </div>
+      <div class="calcout">
+        <div class="card recbar" id="calcrec"></div>
+        <div class="kpi6 k3" id="calckpis"></div>
+        <div class="card">
+          <div class="mxhead"><div><h3>Four-architecture trade-off matrix</h3><p class="unit">Air, evaporative, direct-to-chip and immersion under your exact site profile</p></div>
+            <div class="seg seg-sm" id="mxseg" role="group" aria-label="Chart view"><button type="button" data-mx="water" aria-pressed="true">Scope 1 vs Scope 2 water</button><button type="button" data-mx="energy" aria-pressed="false">Annual energy &amp; OPEX</button></div></div>
+          <div id="mxchart" class="mxchart"></div>
+          <p class="unit" id="mxnote"></p>
+        </div>
+      </div>
+    </div>
+
+    <details class="card methbox">
+      <summary><span><b>Full breakdown &amp; methodology</b><small>Scope 1 and Scope 2 water, energy, all four methods side by side, and the equations behind them</small></span><i aria-hidden="true"></i></summary>
+      <div class="fullin">
+        <div class="kpi6" id="calckpis2"></div>
+        <div class="scroll tablebox"><h3 class="tth">Numerical comparison</h3><p class="unit">Annual figures for a facility at your selected load, climate and grid intensity</p><table class="calctable" id="calctable"></table></div>
+      <div class="methgrid">
+        <div><h4>1. Operational water-energy equations</h4>
+          <p>Following Li et al. (2023), "Making AI Less 'Thirsty'"<a href="#src-16" aria-label="source 16"><sup>16</sup></a>, total operational water is on-site cooling evaporation (Scope 1) plus off-site power generation water (Scope 2):</p>
+          <pre class="eq">E_total  = IT_Load_kW × 8,760 hrs × PUE
+W_Scope1 = IT_Energy_kWh × WUE_onsite
+W_Scope2 = E_total_kWh × EWIF_grid
+W_Total  = W_Scope1 + W_Scope2</pre></div>
+        <div><h4>2. Thermal density &amp; climate bounds</h4>
+          <p><b>ASHRAE TC 9.9 rack thresholds</b><a href="#src-17" aria-label="source 17"><sup>17</sup></a>: air-cooled CRAC / CRAH systems hit heat-rejection ceilings around 40–50 kW/rack. AI clusters at 100–200 kW/rack need direct-to-chip cold plates or immersion.</p>
+          <p><b>Climate PUE &amp; WUE modifiers</b>: hot, dry climates maximize evaporative efficiency (low PUE) at the cost of high evaporation (high WUE). Cold climates allow air-side and water-side economizers.</p>
+          <p><b>NREL EWIF</b><a href="#src-18" aria-label="source 18"><sup>18</sup></a>: power plant water ranges from about 0.5 L/kWh (renewable or dry-cooled) to 1.8 L/kWh (U.S. average) and above 4.5 L/kWh (once-through thermoelectric and high-evaporation hydro).</p></div>
+        <div><h4>3. Site-specific parameters not assumed</h4>
+          <p>An investment-grade study would also need: (a) cooling tower cycles of concentration and blowdown / sewer fees; (b) IT heat-capture ratio (typically 70–85% captured by cold plates, the rest by rear-door heat exchangers or trim air cooling); (c) demand charges ($/kW-month) versus volumetric tariffs; and (d) PFAS / dielectric fluid permitting for two-phase immersion.</p>
+          <p class="fhint">Method PUE and WUE come from the team's calculator prototype. Climate adjustments, the fit score and switching costs are the team's simplified assumptions (see Methods).</p></div>
+      </div>
+      </div>
+    </details>
+  </section>
+
+  <section id="recommend" aria-labelledby="take-h">
+    <div class="verdict-band">
+      <div class="wrap verdict-in solo">
+        <div class="verdict-copy rv">
+          <p class="kick">04 · Recommendation</p>
+          <h2 id="take-h">Direct-to-chip <em>liquid cooling</em>, by default.</h2>
+          <p class="sub">A sealed loop carries heat straight off the chip and reuses the same water, losing only 0–5% of it. What it needs alongside it depends on the location.</p>
         </div>
       </div>
     </div>
     <div class="wrap">
       <div class="takeaways" id="takeaways"></div>
+      <div class="aistrip rv">
+        <div class="ai-col ai-can">
+          <p class="kick">Where AI helps</p>
+          <ul>
+            <li>Tunes fans, pumps and temperature setpoints in real time, so cooling uses only the energy it needs. Google's DeepMind cut the energy used to cool its data centers by up to 40%.<a href="#src-19" aria-label="source 19"><sup>19</sup></a></li>
+            <li>Predicts heat loads and equipment failures before they happen.</li>
+            <li>Shifts flexible computing to cooler hours, or to times when the grid is cleaner.</li>
+          </ul>
+        </div>
+        <div class="ai-col ai-cant">
+          <p class="kick">Where it falls short</p>
+          <ul>
+            <li>It can't fix the wrong cooling method: a perfectly tuned evaporative tower in Phoenix still uses Phoenix's water.</li>
+            <li>It can't offset its own growth: AI is why so many new data centers are being built in the first place.</li>
+            <li>It only optimizes what operators measure, and most don't report their cooling water.</li>
+          </ul>
+        </div>
+      </div>
       <div class="card nextsteps rv">
         <h3>Future research</h3>
         <ol>
@@ -887,14 +1211,10 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
     </div>
   </section>
 
-  <section id="methods" class="wrap" aria-labelledby="me-h">
-    <header class="sechead rv">
-      <span class="secnum">A</span>
-      <div>
-        <p class="kick">Appendix</p>
-        <h2 id="me-h">Methods and limitations</h2>
-      </div>
-    </header>
+  <section id="appendix" class="wrap sources" aria-labelledby="ap-h">
+    <details class="card apx rv">
+      <summary><span><b id="ap-h">Methods, limitations &amp; sources</b><small>How the numbers were built, what they leave out, and where they come from</small></span><i aria-hidden="true"></i></summary>
+      <div class="apx-in">
     <div class="methods">
       <div class="card rv" style="--d:0">
         <h3>Data and definitions</h3>
@@ -904,6 +1224,7 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
           <li><b>Water stress</b> WRI Aqueduct 4.0 baseline water stress: the share of available surface and groundwater that is withdrawn each year, scored 0 (low) to 5 (extremely high). WRI scores river basins; each state's score is the area-weighted average of the basins inside it, using the U.S. extract shared by the independent analysis.</li>
           <li><b>Rainfall</b> NOAA state average annual precipitation, 1971–2000.</li>
           <li><b>Hubs</b> Metro-level figures. Capacity from JLL (mid-2025), rainfall at the main airport station (1991–2020), and carbon for the regional grid that serves the metro, so hub and state numbers can differ.</li>
+          <li><b>Calculator</b> Water and energy follow Li et al. (2023). Method PUE and WUE come from the team's prototype. The team's simplified assumptions: climate shifts air and evaporative efficiency (cooler or more humid air means less evaporation and more free cooling); the fit score starts at 100 and subtracts points for stress-weighted on-site water, power plant water, energy (PUE), racks above the air-cooling limit, and cost or fluid risk; switching costs are $0.1M (air), $0.2M (evaporative), $0.4M (direct-to-chip) and $0.6M (immersion) per MW.</li>
           <li><b>Map colors</b> Water stress uses WRI's five categories (Low through Extremely High). The other measures group states into seven equal-count bands.</li>
         </ul>
       </div>
@@ -917,18 +1238,10 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
         </ul>
       </div>
     </div>
-  </section>
-
-  <section id="sources-sec" class="wrap sources" aria-labelledby="src-h">
-    <header class="sechead rv">
-      <span class="secnum">B</span>
-      <div>
-        <p class="kick">References</p>
-        <h2 id="src-h">Sources</h2>
         <p class="sub">Builds on an independent analysis that mapped data centers against WRI Aqueduct water stress<sup><a href="#src-14" aria-label="source 14">14</a>,<a href="#src-15" aria-label="source 15">15</a></sup>. That work asks <em>where</em> the water risk is; this page adds grid carbon and asks <em>which cooling method fits</em> each place.</p>
+        <ol id="sources"></ol>
       </div>
-    </header>
-    <ol id="sources" class="rv"></ol>
+    </details>
   </section>
 </main>
 
@@ -1056,7 +1369,11 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
     ["NWS Sterling, Dulles precipitation normals", "https://www.weather.gov/media/lwx/climate/iadprecip.pdf"],
     ["State boundaries: us-atlas (U.S. Census Bureau cartographic boundaries)", "https://github.com/topojson/us-atlas"],
     ["AI, Water Stress, and U.S. Data Centers: A Spatial Analysis (independent analysis, 2025): source of the bubble-overlay idea and of the U.S. Aqueduct data extract", "https://chelsearbann.github.io/AI-WaterStress-DataCenter-Analysis"],
-    ["World Resources Institute, Aqueduct 4.0 baseline annual water stress (Kuzma et al., 2023)", "https://doi.org/10.46830/writn.23.00061"]
+    ["World Resources Institute, Aqueduct 4.0 baseline annual water stress (Kuzma et al., 2023)", "https://doi.org/10.46830/writn.23.00061"],
+    ["Li, Yang, Islam & Ren, Making AI Less \"Thirsty\": Uncovering and Addressing the Secret Water Footprint of AI Models (2023): on-site vs. power plant water method", "https://arxiv.org/abs/2304.03271"],
+    ["ASHRAE TC 9.9, Datacom Series: thermal guidelines for data processing environments (air-cooling rack density limits)", "https://www.ashrae.org/technical-resources/bookstore/datacom-series"],
+    ["NREL, Operational Water Consumption and Withdrawal Factors for Electricity Generating Technologies (Macknick et al.)", "https://www.nrel.gov/docs/fy11osti/50900.pdf"],
+    ["Google DeepMind, DeepMind AI reduces Google data centre cooling bill by 40% (2016)", "https://deepmind.google/discover/blog/deepmind-ai-reduces-google-data-centre-cooling-bill-by-40/"]
   ];
 
   // tile-map fallback layout [abbr, col, row]
@@ -1081,7 +1398,7 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
   METRIC_NOTES.rain = "Fainter states get less rain, so water-hungry cooling puts more pressure on local supplies.";
 
   // ===================== STATE =====================
-  var metric = "dc";
+  var metric = "stress";
   var view = { type: "hub", id: "phx" };   // or {type:"state", abbr:"CA"}
   var mapMode = "loading";                 // "svg" | "tiles"
   var showBubbles = true;
@@ -1579,7 +1896,219 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
 
   function renderAnalysis() { renderDcBars(); renderScatter(); renderDry(); renderCarbonRisk(); }
 
-  function update() { renderControls(); paintMap(); renderPanel(); renderCharts(); }
+  function update() { renderControls(); paintMap(); renderPanel(); renderHubCompare(); }
+
+
+  // ===================== SITE CALCULATOR =====================
+  // PUE and on-site WUE (L per kWh of IT energy) per method, from the team's calculator prototype (hot & dry baseline)
+  var CMETHODS = [
+    { id: "air",  name: "Air cooling",    note: "CRAC / CRAH chiller",      pue: 1.60, wue: 0.02, airBased: true,  capexM: 0.10, risk: 0 },
+    { id: "evap", name: "Evaporative",    note: "Cooling towers",           pue: 1.22, wue: 2.25, airBased: true,  capexM: 0.20, risk: 3 },
+    { id: "dtc",  name: "Direct-to-chip", note: "Closed-loop cold plate",   pue: 1.13, wue: 0.08, airBased: false, capexM: 0.4025, risk: 2 },
+    { id: "imm",  name: "Immersion",      note: "Dielectric fluid bath",    pue: 1.06, wue: 0.01, airBased: false, capexM: 0.60, risk: 12 }
+  ];
+  // Simplified climate adjustments (team assumption): cooler or more humid air makes towers evaporate less and lets air systems use outside air
+  var CLIMATE = {
+    dry:   { air: [0, 1],     evap: [0, 1],     dtc: [0, 1],     imm: [0, 1] },
+    humid: { air: [0, 1],     evap: [0.06, .85], dtc: [0.01, 1], imm: [0, 1] },
+    mild:  { air: [-0.15, 1], evap: [-0.04, .7], dtc: [-0.02, 1], imm: [0, 1] },
+    cold:  { air: [-0.30, 1], evap: [-0.08, .45], dtc: [-0.04, 1], imm: [0, 1] }
+  };
+  var STRESSW = { low: 0.3, med: 0.7, ext: 1.0 };
+  var STRESSN = { low: "low", med: "medium-high", ext: "extreme" };
+  function cm(id) { return CMETHODS.filter(function (m) { return m.id === id; })[0]; }
+  function num(id, d) { var v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : d; }
+  function fmtM(v) { return v >= 100 ? fmt0(Math.round(v)) : v >= 10 ? v.toFixed(1) : v.toFixed(2); }
+  function money(v) { var a = Math.abs(v); return (v < 0 ? "−$" : "$") + (a >= 1e6 ? (a / 1e6).toFixed(2) + "M" : fmt0(Math.round(a))); }
+
+  function calcRun(m, p) {
+    var adj = CLIMATE[p.climate][m.id], pue = Math.max(1.02, m.pue + adj[0]), wue = m.wue * adj[1];
+    var itKWh = p.mw * 1000 * 8760, totKWh = itKWh * pue;
+    var onsiteL = itKWh * wue, plantL = totKWh * p.ewif;
+    var cost = totKWh * p.elec + onsiteL / 3785.41 * p.water;
+    // Fit score (team assumption): start at 100 and subtract penalties
+    var sw = STRESSW[p.stress];
+    var pen = 35 * (wue * sw) / 2.25 + 10 * (pue * p.ewif) / (1.6 * 4.5) + 25 * Math.max(0, pue - 1.06) / 0.54 + m.risk;
+    if (m.airBased && p.rack > 50) pen += 40; else if (m.airBased && p.rack > 40) pen += 10;
+    if (m.id === "imm" && p.rack <= 45) pen += 15;
+    if (m.id === "dtc" && p.rack <= 20) pen += 10;
+    return { m: m, pue: pue, wue: wue, totMWh: totKWh / 1000, onsiteML: onsiteL / 1e6, plantML: plantL / 1e6, totML: (onsiteL + plantL) / 1e6, cost: cost,
+      fit: Math.max(0, Math.min(100, Math.round(100 - pen))), overAir: m.airBased && p.rack > 50, permitRisk: wue > 1 && p.stress !== "low" };
+  }
+
+  function syncChips() {
+    var groups = document.querySelectorAll("#calc .chips");
+    for (var i = 0; i < groups.length; i++) {
+      var v = $(groups[i].getAttribute("data-for")).value, bs = groups[i].querySelectorAll("button");
+      for (var j = 0; j < bs.length; j++) bs[j].setAttribute("aria-pressed", bs[j].getAttribute("data-v") === String(+v));
+    }
+  }
+
+  function renderCalc() {
+    var g = $("c-grid").value;
+    if (g !== "custom" && document.activeElement !== $("c-ewif")) $("c-ewif").value = g;
+    var p = { base: $("c-base").value, mw: num("c-mw", 20), rack: num("c-rack", 100), climate: $("c-climate").value, stress: $("c-stress").value,
+              ewif: num("c-ewif", 1.8), elec: num("c-elec", 0.085), water: num("c-water", 6.5), horizon: Math.max(1, num("c-horizon", 5)) };
+    syncChips();
+    $("c-rackalert").textContent = p.rack > 50 ? "ASHRAE TC 9.9 alert: " + fmt0(p.rack) + " kW/rack exceeds standard air cooling thermal limits (~40–50 kW/rack)." :
+      p.rack > 40 ? "Near the air cooling limit (~40–50 kW/rack)." : "";
+    $("c-mw-v").textContent = fmt0(p.mw) + " MW"; $("c-rack-v").textContent = fmt0(p.rack) + " kW";
+    var R = CMETHODS.map(function (m) { return calcRun(m, p); });
+    var base = R.filter(function (r) { return r.m.id === p.base; })[0];
+    var rec = R.slice().sort(function (a, b) { return b.fit - a.fit || a.cost - b.cost; })[0];
+    var same = rec.m.id === base.m.id;
+    var dS = base.cost - rec.cost;
+    var capex = same ? 0 : rec.m.capexM * 1e6 * p.mw, payback = !same && dS > 0 ? capex / dS : null;
+    calcState = { R: R, base: base, rec: rec };
+
+    var msg = same ? "<b>" + rec.m.name + "</b> is already the best fit for this site, so no switch is recommended."
+      : "Switching from <b>" + base.m.name.toLowerCase() + "</b> to <b>" + rec.m.name.toLowerCase() + "</b> best balances local water, power plant water, energy and cost at this site.";
+    if (base.permitRisk) msg += " With " + STRESSN[p.stress] + " watershed stress, the current open evaporative system is a high permitting and community risk.";
+    $("calcrec").innerHTML = '<div><span class="rk">Recommended cooling method</span><h3>' + rec.m.name + '</h3></div>' +
+      '<div class="score"><span class="rk">Site fit score</span><br><b>' + rec.fit + '<small>/100</small></b></div><p>' + msg + '</p>';
+
+    function fL(ml) { var l = ml * 1e6; return l >= 1e9 ? (l / 1e9).toFixed(2) + "B L" : (l / 1e6).toFixed(1) + "M L"; }
+    function delta(cur, now, unit, what) {
+      var d = now - cur;
+      if (same || Math.abs(d) < 1e-9) return '<span class="kd flat">No change</span>';
+      var pct = cur ? Math.abs(d / cur * 100).toFixed(1) : "0";
+      return '<span class="kd ' + (d < 0 ? "good" : "bad") + '">' + (d < 0 ? "▼ −" : "▲ +") + unit(Math.abs(d)) + (what ? " (" + (d < 0 ? "−" : "+") + pct + "% " + what + ")" : "") + '</span>';
+    }
+    function card(label, sub, val, unitTxt, cur, dl) {
+      return '<div class="k6"><span class="kl">' + label + '</span><span class="ks">' + sub + '</span><span class="kval">' + val + (unitTxt ? '<small>' + unitTxt + '</small>' : "") + '</span>' +
+        (cur ? '<span class="kc">' + cur + '</span>' : "") + dl + '</div>';
+    }
+    var ph = payback == null ? (same ? "—" : "None") : payback.toFixed(1) + " yrs";
+    var cS1 = card("Scope 1 · On-site water", "WUE: " + rec.wue.toFixed(2) + " L/kWh", fL(rec.onsiteML), "/ yr", "Current: " + fL(base.onsiteML) + "/yr", delta(base.onsiteML, rec.onsiteML, fL, "local water"));
+    var cS2 = card("Scope 2 · Grid water", fmt0(p.ewif * 10) / 10 + " L/kWh", fL(rec.plantML), "/ yr", "Current: " + fL(base.plantML) + "/yr", delta(base.plantML, rec.plantML, fL, "power plant water"));
+    var cT = card("Total water · S1 + S2", "Net water footprint", fL(rec.totML), "/ yr", "Current: " + fL(base.totML) + "/yr", delta(base.totML, rec.totML, fL, "total water"));
+    var cP = card("Efficiency · PUE", "PUE: " + rec.pue.toFixed(2), fmt0(Math.round(rec.totMWh)), "MWh/yr", "Current: " + fmt0(Math.round(base.totMWh)) + " MWh/yr · PUE " + base.pue.toFixed(2),
+        same ? '<span class="kd flat">No change</span>' : '<span class="kd ' + (rec.totMWh <= base.totMWh ? "good" : "bad") + '">' + (rec.totMWh <= base.totMWh ? "▼ −" : "▲ +") + fmt0(Math.round(Math.abs(base.totMWh - rec.totMWh))) + " MWh/yr " + (rec.totMWh <= base.totMWh ? "saved" : "added") + '</span>');
+    var cSav = card("Annual utility savings", "OPEX delta", same ? "—" : money(dS), same ? "" : "/ yr", "Electricity + water tariff savings",
+        same ? "" : '<span class="kd ' + (dS >= 0 ? "good" : "bad") + '">' + fmt0(p.horizon) + "-yr cumulative: " + money(dS * p.horizon) + '</span>');
+    var cPay = card("Estimated simple payback", payback != null && payback <= p.horizon ? "Within " + fmt0(p.horizon) + "-yr target" : same ? "No retrofit needed" : "Beyond " + fmt0(p.horizon) + "-yr target", ph, "",
+        same ? "" : "Est. net retrofit CapEx: " + money(capex), same ? "" : '<span class="kd flat">Driven by PUE &amp; local water tariff savings</span>');
+    $("calckpis").innerHTML = cT + cSav + cPay;
+    $("calckpis2").innerHTML = cS1 + cS2 + cP;
+
+    renderMatrix2();
+
+    $("calctable").innerHTML = '<thead><tr><th>Cooling method</th><th class="num">PUE</th><th class="num">WUE L/kWh</th><th class="num">Scope 1</th><th class="num">Scope 2</th><th class="num">Total water</th><th class="num">Annual cost</th></tr></thead><tbody>' +
+      R.map(function (r) {
+        var bd = (r.m.id === base.m.id ? '<span class="badge cur">Current</span>' : "") + (r.m.id === rec.m.id ? '<span class="badge opt">Optimal</span>' : "") +
+          (r.overAir ? '<span class="badge over">Over rack limit</span>' : "") + (r.permitRisk ? '<span class="badge risk">Permit risk</span>' : "");
+        return '<tr class="' + (r.m.id === rec.m.id ? "isrec" : r.m.id === base.m.id ? "isbase" : "") + '"><th>' + r.m.name + '<small>' + r.m.note + ' · fit ' + r.fit + '/100</small>' + bd + '</th>' +
+          '<td class="num">' + r.pue.toFixed(2) + '</td><td class="num">' + r.wue.toFixed(2) + '</td><td class="num">' + fL(r.onsiteML) + '</td><td class="num">' + fL(r.plantML) + '</td>' +
+          '<td class="num">' + fL(r.totML) + '</td><td class="num">' + money(r.cost) + '/yr</td></tr>';
+      }).join("") + '</tbody>';
+  }
+
+  var calcState = null, mxView = "water";
+  function niceMax(v) { var e = Math.pow(10, Math.floor(Math.log10(v || 1))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e; }
+  function renderMatrix2() {
+    if (!calcState) return;
+    var R = calcState.R, rec = calcState.rec;
+    var W = 560, H = 260, L = 56, Rp = 12, T = 18, B = 34, cw = (W - L - Rp) / R.length, g = "";
+    var Y;
+    if (mxView === "water") {
+      var mx = niceMax(Math.max.apply(null, R.map(function (r) { return r.totML; })));
+      Y = function (v) { return T + (1 - v / mx) * (H - T - B); };
+      for (var i = 0; i <= 4; i++) { var tv = mx * i / 4; g += '<line class="ax" x1="' + L + '" x2="' + (W - Rp) + '" y1="' + Y(tv) + '" y2="' + Y(tv) + '"/><text class="tk" x="' + (L - 8) + '" y="' + (Y(tv) + 4) + '" text-anchor="end">' + fmt0(Math.round(tv)) + '</text>'; }
+      R.forEach(function (r, k) {
+        var x = L + k * cw + cw * 0.22, w = cw * 0.56;
+        g += '<rect x="' + x + '" y="' + Y(r.onsiteML) + '" width="' + w + '" height="' + (Y(0) - Y(r.onsiteML)) + '" fill="var(--heat)" rx="2"/>';
+        g += '<rect x="' + x + '" y="' + Y(r.totML) + '" width="' + w + '" height="' + (Y(r.onsiteML) - Y(r.totML)) + '" fill="var(--water)" rx="2"/>';
+        g += '<text class="vl" x="' + (x + w / 2) + '" y="' + (Y(r.totML) - 6) + '" text-anchor="middle">' + fmt0(Math.round(r.totML)) + '</text>';
+        g += '<text class="xl' + (r.m.id === rec.m.id ? " rec" : "") + '" x="' + (x + w / 2) + '" y="' + (H - 12) + '" text-anchor="middle">' + r.m.name + '</text>';
+      });
+      $("mxnote").innerHTML = '<span class="mxleg"><span><i style="background:var(--heat)"></i>Scope 1 · on-site</span><span><i style="background:var(--water)"></i>Scope 2 · grid</span></span>Million liters per year. On-site evaporation versus off-site power plant water at the selected grid EWIF.';
+    } else {
+      var mE = niceMax(Math.max.apply(null, R.map(function (r) { return r.totMWh / 1000; }))), mC = Math.max.apply(null, R.map(function (r) { return r.cost; }));
+      Y = function (v) { return T + (1 - v / mE) * (H - T - B); };
+      for (var j = 0; j <= 4; j++) { var ev = mE * j / 4; g += '<line class="ax" x1="' + L + '" x2="' + (W - Rp) + '" y1="' + Y(ev) + '" y2="' + Y(ev) + '"/><text class="tk" x="' + (L - 8) + '" y="' + (Y(ev) + 4) + '" text-anchor="end">' + fmt0(Math.round(ev)) + '</text>'; }
+      R.forEach(function (r, k) {
+        var x0 = L + k * cw + cw * 0.16, w = cw * 0.32, e = r.totMWh / 1000, cH = (r.cost / mC) * (Y(0) - Y(mE * (Math.max.apply(null, R.map(function (q) { return q.totMWh / 1000; })) / mE)));
+        g += '<rect x="' + x0 + '" y="' + Y(e) + '" width="' + w + '" height="' + (Y(0) - Y(e)) + '" fill="var(--s1)" rx="2"/>';
+        g += '<rect x="' + (x0 + w + 4) + '" y="' + (Y(0) - cH) + '" width="' + w + '" height="' + cH + '" fill="var(--s4)" rx="2"/>';
+        g += '<text class="vl" x="' + (x0 + w / 2) + '" y="' + (Y(e) - 6) + '" text-anchor="middle">' + fmt0(Math.round(e)) + '</text>';
+        g += '<text class="vl" x="' + (x0 + w * 1.5 + 4) + '" y="' + (Y(0) - cH - 6) + '" text-anchor="middle">' + money(r.cost).replace(".00M", "M") + '</text>';
+        g += '<text class="xl' + (r.m.id === rec.m.id ? " rec" : "") + '" x="' + (x0 + w + 2) + '" y="' + (H - 12) + '" text-anchor="middle">' + r.m.name + '</text>';
+      });
+      $("mxnote").innerHTML = '<span class="mxleg"><span><i style="background:var(--s1)"></i>Facility energy (GWh/yr, axis)</span><span><i style="background:var(--s4)"></i>Annual utility cost (scaled to energy)</span></span>Electricity and on-site water cost per year at your tariffs.';
+    }
+    $("mxchart").innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Four-method comparison chart">' + g + '</svg>';
+    var bs = document.querySelectorAll("#mxseg button");
+    for (var q = 0; q < bs.length; q++) bs[q].setAttribute("aria-pressed", bs[q].getAttribute("data-mx") === mxView);
+  }
+  $("mxseg").addEventListener("click", function (e) { var b = e.target.closest("[data-mx]"); if (b) { mxView = b.getAttribute("data-mx"); renderMatrix2(); } });
+
+  document.getElementById("calc").addEventListener("click", function (e) {
+    var t = e.target.closest(".chips button");
+    if (t) { $(t.parentNode.getAttribute("data-for")).value = t.getAttribute("data-v"); renderCalc(); }
+  });
+  document.getElementById("calc").addEventListener("input", function (e) {
+    if (e.target.id === "c-ewif") $("c-grid").value = "custom";
+    renderCalc();
+  });
+  document.getElementById("calc").addEventListener("change", function () { renderCalc(); });
+
+  // ===================== COOLING METHOD SLIDER =====================
+  var SCENES = [
+    { id: "air", name: "Air", stat: "1.60", statL: "PUE: the most power spent on cooling",
+      cap: "<b>Air cooling.</b> Fans push air across the chips while chillers cool the room. Almost no water on site, but it uses the most electricity, and it can't keep up with dense AI racks." },
+    { id: "evap", name: "Evaporative", stat: "75–85%", statL: "of cooling water evaporates",
+      cap: "<b>Evaporative cooling.</b> Hot water is cooled in a tower by letting part of it evaporate. Very energy-efficient, but it uses millions of gallons of local water a day." },
+    { id: "dtc", name: "Direct-to-chip", pick: true, stat: "95%+", statL: "of loop water reused",
+      cap: "<b>Direct-to-chip liquid cooling.</b> A sealed loop carries heat straight off the chip and reuses the same water. Low energy and low water, which is why it's our pick." },
+    { id: "imm", name: "Immersion", stat: "~0", statL: "water used on site",
+      cap: "<b>Immersion cooling.</b> Servers sit in a tank of special fluid that absorbs their heat directly. The most efficient, but the most expensive, with concerns about the fluids (PFAS)." }
+  ];
+  function setScene(i) {
+    var sc = SCENES[i];
+    var svgs = document.querySelectorAll(".loop .scene");
+    for (var k = 0; k < svgs.length; k++) svgs[k].classList.toggle("on", svgs[k].getAttribute("data-scene") === sc.id);
+    $("loopstat-b").textContent = sc.stat; $("loopstat-s").textContent = sc.statL;
+    $("mcap").innerHTML = sc.cap;
+    $("mslide").value = i; $("mslide").setAttribute("aria-valuetext", sc.name);
+    var fm = METHODS[i];
+    $("mfit").innerHTML = '<span class="mfl">Fit in our three hubs</span>' + HUBS.map(function (h, k) {
+      var c = CHIP[fm.fit[k][0]];
+      return '<span class="mfc" title="' + esc(fm.fit[k][1]) + '"><span class="dotx" style="background:var(' + h.color + ')"></span>' + h.short + ' <span class="chip ' + c[0] + '">' + c[1] + ' ' + c[2] + '</span></span>';
+    }).join("");
+    $("mticks").innerHTML = SCENES.map(function (x, j) {
+      return '<button type="button" data-mscene="' + j + '" aria-pressed="' + (j === i) + '">' + x.name + (x.pick ? '<span class="pk">Our pick</span>' : "") + '</button>';
+    }).join("");
+  }
+  $("mslide").addEventListener("input", function (e) { setScene(+e.target.value); });
+  $("mticks").addEventListener("click", function (e) { var b = e.target.closest("[data-mscene]"); if (b) setScene(+b.getAttribute("data-mscene")); });
+
+
+  // ===================== HUB COMPARISON =====================
+  var HUBRISK = { nova: "Growth pressure", dfw: "High grid emissions", phx: "Water scarcity" };
+  var HUBCLIM = { nova: "Humid, four seasons", dfw: "Hot summers, droughts", phx: "Hot desert" };
+  function renderHubCompare() {
+    var el = $("hubcmp"); if (!el) return;
+    function rank(vals, lowerBetter) {
+      var order = vals.slice().sort(function (a, b) { return lowerBetter ? a - b : b - a; });
+      return vals.map(function (v) { var i = order.indexOf(v); return i === 0 ? "good" : i === 1 ? "warn" : "bad"; });
+    }
+    var rain = HUBS.map(function (h) { return h.rain; }), st = HUBS.map(function (h) { return BY_ABBR[h.state].stress; }), gr = HUBS.map(function (h) { return h.grid; });
+    var rows = [
+      ["Climate", HUBS.map(function (h) { return HUBCLIM[h.id]; }), ["good", "warn", "bad"]],
+      ["Rainfall", rain.map(function (v) { return v.toFixed(0) + " in/yr"; }), rank(rain, false)],
+      ["Water stress (0–5)", st.map(function (v) { var r = Math.round(v * 20) / 20, t = r.toFixed(2).replace(/0$/, ""); return t + ' <small>' + (v >= 3 ? "High" : v >= 2 ? "Med–high" : "Low–med") + '</small>'; }), rank(st, true)],
+      ["Grid carbon (lb CO₂/MWh)", gr.map(String), rank(gr, true)],
+      ["Main risk", HUBS.map(function (h) { return HUBRISK[h.id]; }), [null, null, null]]
+    ];
+    var sel = view.type === "hub" ? view.id : null;
+    el.innerHTML = '<thead><tr><th></th>' + HUBS.map(function (h) {
+      return '<th class="hc' + (sel === h.id ? " on" : "") + '"' + hc(h) + '><button type="button" data-hub="' + h.id + '"><span class="pinnum">' + h.n + '</span><span class="hn-l">' + h.name + '</span><span class="hn-s">' + h.short + '</span></button></th>';
+    }).join("") + '</tr></thead><tbody>' + rows.map(function (r) {
+      return '<tr><th>' + r[0] + '</th>' + r[1].map(function (v, i) {
+        return '<td class="' + (sel === HUBS[i].id ? "on " : "") + (r[2][i] ? "t-" + r[2][i] : "t-n") + '">' + v + '</td>';
+      }).join("") + '</tr>';
+    }).join("") + '</tbody>';
+  }
 
   // ===================== EVENTS =====================
   document.addEventListener("click", function (e) {
@@ -1596,11 +2125,6 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
       view = { type: "state", abbr: abbr }; update();
       if (!t.closest("#map") && !t.closest("#panel")) document.getElementById("map-h").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
     }
-  });
-  $("dcall").addEventListener("click", function () { dcShowAll = !dcShowAll; renderDcBars(); });
-  $("scatterseg").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-sy]");
-    if (b) { scatterY = b.getAttribute("data-sy"); renderScatter(); }
   });
   $("bubtoggle").addEventListener("change", function (e) {
     showBubbles = e.target.checked;
@@ -1619,18 +2143,6 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
     var pin = e.target.closest("#map .pin");
     if (pin) { var h = hub(pin.getAttribute("data-hub")); return showTip(e, "<b>Hub " + h.n + ": " + h.name + "</b><br>Select to see details"); }
     hideTip();
-  });
-
-  // matrix column highlight
-  $("matrix").addEventListener("mouseover", function (e) {
-    var cell = e.target.closest("td, thead th");
-    var idx = cell ? cell.cellIndex : -1;
-    var all = this.querySelectorAll("td, th");
-    for (var i = 0; i < all.length; i++) all[i].classList.toggle("colhot", idx > 0 && all[i].cellIndex === idx);
-  });
-  $("matrix").addEventListener("mouseleave", function () {
-    var hot = this.querySelectorAll(".colhot");
-    for (var i = 0; i < hot.length; i++) hot[i].classList.remove("colhot");
   });
 
   // cursor spotlight on cards
@@ -1763,9 +2275,69 @@ thead th { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
     raf = requestAnimationFrame(loop);
   }
 
+
+  // ===================== IMMERSIVE LAYER =====================
+  // text scramble on chapter headlines (text nodes only, so <em> styling is kept)
+  var GLYPHS = "▖▗▘▙▚▛▜▝▞▟░▒/\\<>_-=+*01";
+  function scramble(el) {
+    if (reduceMotion || el.dataset.scrambled) return; el.dataset.scrambled = "1";
+    var nodes = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    while (w.nextNode()) if (w.currentNode.nodeValue.trim()) nodes.push({ n: w.currentNode, t: w.currentNode.nodeValue });
+    var total = nodes.reduce(function (a, x) { return a + x.t.length; }, 0), t0 = null, dur = 900;
+    function frame(ts) {
+      if (!t0) t0 = ts; var prog = Math.min(1, (ts - t0) / dur), shown = Math.floor(prog * total), c = 0;
+      nodes.forEach(function (x) {
+        var out = "";
+        for (var i = 0; i < x.t.length; i++, c++) {
+          var ch = x.t[i];
+          out += c < shown || ch === " " ? ch : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+        }
+        x.n.nodeValue = out;
+      });
+      if (prog < 1) requestAnimationFrame(frame); else nodes.forEach(function (x) { x.n.nodeValue = x.t; });
+    }
+    requestAnimationFrame(frame);
+  }
+  if ("IntersectionObserver" in window) {
+    var scrIO = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { scramble(e.target); scrIO.unobserve(e.target); } });
+    }, { threshold: 0.4 });
+    Array.prototype.forEach.call(document.querySelectorAll(".sechead h2, .verdict-copy h2"), function (h) { scrIO.observe(h); });
+  }
+
+  // custom cursor (fine pointers only)
+  if (window.matchMedia && window.matchMedia("(pointer: fine)").matches && !reduceMotion) {
+    var cur = document.createElement("div"); cur.className = "cursor"; cur.setAttribute("aria-hidden", "true");
+    var dot = document.createElement("div"); dot.className = "cursor-dot"; dot.setAttribute("aria-hidden", "true");
+    document.body.appendChild(cur); document.body.appendChild(dot);
+    var mx = -100, my = -100, cx = -100, cy = -100;
+    document.addEventListener("pointermove", function (e) {
+      mx = e.clientX; my = e.clientY; dot.style.transform = "translate(" + mx + "px," + my + "px)";
+      var hot = e.target.closest && e.target.closest("a, button, input, select, summary, [data-st], .pin, label");
+      cur.classList.toggle("hot", !!hot);
+    }, { passive: true });
+    document.addEventListener("pointerleave", function () { mx = my = -100; });
+    (function loopCur() { cx += (mx - cx) * 0.18; cy += (my - cy) * 0.18; cur.style.transform = "translate(" + cx + "px," + cy + "px)"; requestAnimationFrame(loopCur); })();
+    document.documentElement.classList.add("has-cursor");
+  }
+
+  // loading screen
+  (function () {
+    var ld = $("loader"); if (!ld) return;
+    if (reduceMotion) { ld.remove(); document.documentElement.classList.remove("is-loading"); return; }
+    var n = $("loader-n"), t0 = null;
+    function step(ts) {
+      if (!t0) t0 = ts; var p = Math.min(1, (ts - t0) / 1300), e = 1 - Math.pow(1 - p, 3);
+      n.textContent = String(Math.round(e * 100)).padStart(3, "0");
+      if (p < 1) requestAnimationFrame(step);
+      else { ld.classList.add("done"); document.documentElement.classList.remove("is-loading"); setTimeout(function () { ld.remove(); }, 1100); }
+    }
+    requestAnimationFrame(step);
+  })();
+
   // ===================== INIT =====================
-  syncTheme(); renderHeroStats(); renderTicker(); renderHubStrip(); renderControls(); renderPanel(); renderCharts();
-  renderMatrix(); renderTakeaways(); renderSources(); renderStateTable(); renderAnalysis();
+  syncTheme(); renderHeroStats(); renderTicker(); renderControls(); renderPanel();
+  renderTakeaways(); renderSources(); renderCalc(); setScene(2); renderHubCompare();
   observeReveals(); onScroll(); flowField();
   setTimeout(function () {
     var hs = document.querySelectorAll("[data-hero]");
